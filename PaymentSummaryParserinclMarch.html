@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Summary Parser</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --bg2: #13161e; --bg3: #1a1d24;
+    --border: #1e2230; --border2: #2a2f3e;
+    --text: #e8e6e0; --muted: #666; --muted2: #444;
+    --accent: #94a3b8; /* neutral until a file is loaded */
+    --green: #34d399; --red: #fb7185;
+    --lex-accent: #4a9eff;
+    --mer-accent: #a78bfa;
+    --slate: #94a3b8; --amber: #fbbf24;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono','Courier New',monospace; min-height: 100vh; padding: 2.5rem 2rem; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg3); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  .container { max-width: 1280px; margin: 0 auto; }
+
+  /* ── Header ── */
+  header { margin-bottom: 2rem; }
+  .tag { font-size: 0.65rem; color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.3rem; transition: color 0.3s; }
+  h1 { font-family: 'IBM Plex Sans',sans-serif; font-size: 1.6rem; font-weight: 600; color: #fff; margin-bottom: 0.3rem; }
+  .subtitle { font-size: 0.75rem; color: var(--muted); }
+
+  /* ── Format detection badge ── */
+  .format-badge-wrap { margin-bottom: 1.25rem; min-height: 2rem; display: flex; align-items: center; }
+  .format-badge {
+    display: none; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .format-badge.lex  { display: inline-flex; background: rgba(74,158,255,0.12); border: 1px solid rgba(74,158,255,0.4); color: var(--lex-accent); }
+  .format-badge.mer  { display: inline-flex; background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.4); color: var(--mer-accent); }
+  .format-badge .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .format-badge.lex .dot { background: var(--lex-accent); }
+  .format-badge.mer .dot { background: var(--mer-accent); }
+
+  /* ── Controls ── */
+  .control-row {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.85rem 1.25rem; margin-bottom: 1.25rem;
+  }
+  .ctrl-label { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+  .toggle-pills { display: flex; background: var(--bg3); border-radius: 6px; padding: 3px; gap: 3px; }
+  .toggle-pill {
+    padding: 5px 18px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; border: none; background: transparent;
+    color: var(--muted); font-family: 'IBM Plex Mono',monospace;
+    transition: background 0.15s, color 0.15s;
+  }
+  .toggle-pill.active { background: var(--accent); color: #fff; }
+  .toggle-pill:not(.active):hover { color: var(--text); }
+  .ctrl-hint { font-size: 0.68rem; color: var(--muted2); }
+  .chambers-select {
+    background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+    color: var(--text); font-family: 'IBM Plex Mono',monospace; font-size: 0.8rem;
+    padding: 5px 10px; cursor: pointer; outline: none; transition: border-color 0.15s;
+  }
+  .chambers-select:focus, .chambers-select:hover { border-color: var(--accent); }
+  .chambers-custom {
+    display: none; background: var(--bg3); border: 1px solid var(--accent);
+    border-radius: 6px; color: var(--text); font-family: 'IBM Plex Mono',monospace;
+    font-size: 0.8rem; padding: 5px 10px; outline: none; min-width: 220px;
+  }
+
+  /* ── Drop zone ── */
+  .drop-zone {
+    border: 1.5px dashed var(--border2); border-radius: 10px; padding: 2.5rem 2rem;
+    text-align: center; cursor: pointer; background: var(--bg2);
+    transition: border-color 0.2s, background 0.2s; margin-bottom: 1.25rem; user-select: none;
+  }
+  .drop-zone:hover, .drop-zone.dragging { border-color: var(--accent); background: rgba(148,163,184,0.05); }
+  .drop-icon { font-size: 2rem; margin-bottom: 0.6rem; line-height: 1; }
+  .drop-label { font-size: 0.9rem; color: #aaa; font-family: 'IBM Plex Sans',sans-serif; }
+  .drop-label.active { color: var(--accent); }
+  .drop-hint { font-size: 0.7rem; color: var(--muted2); margin-top: 0.4rem; }
+
+  /* ── Error ── */
+  .error { display: none; background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.3); border-radius: 8px; padding: 0.8rem 1rem; color: var(--red); font-size: 0.8rem; margin-bottom: 1.25rem; }
+
+  /* ── Results ── */
+  #results { display: none; }
+
+  /* ── Meridian info cards ── */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+  .info-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; }
+  .info-card-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .info-card-value { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+  .info-card-value.accent { color: var(--accent); }
+
+  /* ── VAT check ── */
+  .vat-check { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+  .vat-check-title { font-size: 0.65rem; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; margin-bottom: 0.75rem; }
+  .vat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+  .vat-cell { display: flex; flex-direction: column; gap: 3px; }
+  .vat-cell-label { font-size: 0.65rem; color: var(--muted); }
+  .vat-cell-value { font-size: 0.9rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* ── Summary bar ── */
+  .summary-bar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-bottom: 1rem; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; font-size: 0.72rem; }
+  .chip-label { color: var(--muted); }
+  .match-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 500; }
+  .match-badge.ok  { background: rgba(52,211,153,0.1);  border: 1px solid rgba(52,211,153,0.3);  color: var(--green); }
+  .match-badge.err { background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.3); color: var(--red); }
+  .copy-btn { padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 0.72rem; font-family: 'IBM Plex Mono',monospace; letter-spacing: 0.05em; transition: background 0.15s; border: 1px solid; }
+  /* copy btn colours set dynamically via JS when format is known */
+  .copy-btn.dl { background: #1a3a1a; border-color: #2a6a2a; color: #86efac; }
+  .copy-btn.dl:hover { background: #2a5a2a; }
+  .copy-btn.march-btn { background: #2a1a3a; border-color: #6a3a8a; color: #d8b4fe; }
+  .copy-btn.march-btn:hover { background: #3a2a5a; }
+  .copy-btn.march-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+  thead tr { background: var(--bg2); border-bottom: 1px solid var(--border); }
+  th { padding: 8px 10px; text-align: left; color: var(--accent); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; position: sticky; top: 0; background: var(--bg2); z-index: 2; }
+  td { padding: 6px 10px; border-bottom: 1px solid #181b24; }
+  /* LEX row types */
+  tr.row-in  { background: rgba(52,211,153,0.03); }
+  tr.row-in:hover  { background: rgba(52,211,153,0.08); }
+  tr.row-out { background: rgba(251,113,133,0.05); }
+  tr.row-out:hover { background: rgba(251,113,133,0.1); }
+  tr.row-vatwarning { background: rgba(251,191,36,0.18); box-shadow: inset 3px 0 0 #fbbf24; }
+  tr.row-vatwarning:hover { background: rgba(251,191,36,0.28); }
+  tr.row-adj { background: rgba(251,191,36,0.07); box-shadow: inset 3px 0 0 rgba(251,191,36,0.4); }
+  tr.row-adj:hover { background: rgba(251,191,36,0.13); }
+  tr.row-adj td { font-style: italic; color: #a89060; }
+  /* Meridian row types */
+  tr.row-expenses { background: rgba(74,158,255,0.04); }
+  tr.row-expenses:hover { background: rgba(74,158,255,0.09); }
+  tr.row-mixed { background: rgba(167,139,250,0.05); }
+  tr.row-mixed:hover { background: rgba(167,139,250,0.1); }
+  tr.row-vatoverride { background: rgba(251,191,36,0.12); box-shadow: inset 3px 0 0 #fbbf24; }
+  tr.row-vatoverride:hover { background: rgba(251,191,36,0.22); }
+  /* Shared */
+  .amt  { text-align: right; font-variant-numeric: tabular-nums; }
+  .pos  { color: var(--green); }
+  .neg  { color: var(--red); }
+  .muted-txt { color: #888; }
+  .slate  { color: var(--slate); }
+  .purple { color: var(--mer-accent); }
+  .blue   { color: var(--lex-accent); }
+  .amber  { color: var(--amber); }
+  .desc { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tfoot tr { background: var(--bg2); border-top: 2px solid var(--border2); }
+  tfoot td { padding: 7px 10px; }
+  .foot-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .sheet-note { margin-top: 0.6rem; font-size: 0.65rem; color: var(--muted2); }
+  .sheet-note span { color: var(--accent); }
+
+  /* ── Legend ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="tag" id="hdr-tag">LEX &amp; Meridian</div>
+    <h1>Payment Summary Parser</h1>
+    <p class="subtitle" id="hdr-sub">Supports LEX (.xlsx) and Meridian (.xls / .xlsx) — format detected automatically</p>
+  </header>
+
+  <!-- Format detection badge -->
+  <div class="format-badge-wrap">
+    <div class="format-badge" id="format-badge">
+      <div class="dot"></div>
+      <span id="format-badge-text"></span>
+    </div>
+  </div>
+
+  <!-- Account code toggle -->
+  <div class="control-row">
+    <span class="ctrl-label">*AccountCode</span>
+    <div class="toggle-pills">
+      <button class="toggle-pill active" id="pill-100" onclick="setAccountCode('100')">100</button>
+      <button class="toggle-pill"        id="pill-200" onclick="setAccountCode('200')">200</button>
+    </div>
+    <span class="ctrl-hint">Account code applied to all entries</span>
+  </div>
+
+  <!-- Payee / Chambers -->
+  <div class="control-row">
+    <span class="ctrl-label">Payee</span>
+    <select class="chambers-select" id="chambers-select" onchange="setChambers(this.value)">
+      <option value="Chambers">Chambers</option>
+      <option value="11KBW">11KBW</option>
+      <option value="1 Hare Court">1 Hare Court</option>
+      <option value="1GC|Family Law">1GC|Family Law</option>
+      <option value="2 Bedford Row">2 Bedford Row</option>
+      <option value="2 Hare Court">2 Hare Court</option>
+      <option value="23ES">23ES</option>
+      <option value="25 Bedford Row">25 Bedford Row</option>
+      <option value="36Group">36Group</option>
+      <option value="3 Verulam Buildings (3VB)">3 Verulam Buildings (3VB)</option>
+      <option value="39 Essex Chambers">39 Essex Chambers</option>
+      <option value="4 New Square Chambers">4 New Square Chambers</option>
+      <option value="4 Pump Court">4 Pump Court</option>
+      <option value="4 Stone Buildings">4 Stone Buildings</option>
+      <option value="4PB">4PB</option>
+      <option value="5 Essex Chambers">5 Essex Chambers</option>
+      <option value="5 King's Bench Walk">5 King's Bench Walk</option>
+      <option value="6KBW College Hill">6KBW College Hill</option>
+      <option value="7 King's Bench Walk (7KBW)">7 King's Bench Walk (7KBW)</option>
+      <option value="Blackstone Chambers">Blackstone Chambers</option>
+      <option value="Brick Court Chambers">Brick Court Chambers</option>
+      <option value="Cobden House Chambers">Cobden House Chambers</option>
+      <option value="Dere Street Barristers">Dere Street Barristers</option>
+      <option value="Doughty Street Chambers">Doughty Street Chambers</option>
+      <option value="Essex Court Chambers">Essex Court Chambers</option>
+      <option value="Exchange Chambers">Exchange Chambers</option>
+      <option value="Falcon Chambers">Falcon Chambers</option>
+      <option value="Fountain Court Chambers">Fountain Court Chambers</option>
+      <option value="Garden Court Chambers">Garden Court Chambers</option>
+      <option value="Garden Court North Chambers">Garden Court North Chambers</option>
+      <option value="Gatehouse Chambers">Gatehouse Chambers</option>
+      <option value="Gray's Inn Tax Chambers">Gray's Inn Tax Chambers</option>
+      <option value="Henderson Chambers">Henderson Chambers</option>
+      <option value="Keating Chambers">Keating Chambers</option>
+      <option value="Kings Chambers">Kings Chambers</option>
+      <option value="Landmark Chambers">Landmark Chambers</option>
+      <option value="Littleton Chambers">Littleton Chambers</option>
+      <option value="Maitland Chambers">Maitland Chambers</option>
+      <option value="Matrix Chambers">Matrix Chambers</option>
+      <option value="Monckton Chambers">Monckton Chambers</option>
+      <option value="Mountford Chambers">Mountford Chambers</option>
+      <option value="No5 Barristers' Chambers">No5 Barristers' Chambers</option>
+      <option value="One Essex Court">One Essex Court</option>
+      <option value="Outer Temple Chambers">Outer Temple Chambers</option>
+      <option value="Park Square Barristers">Park Square Barristers</option>
+      <option value="Pump Court Tax Chambers">Pump Court Tax Chambers</option>
+      <option value="Red Lion Chambers">Red Lion Chambers</option>
+      <option value="Serle Court">Serle Court</option>
+      <option value="South Square">South Square</option>
+      <option value="St John's Chambers">St John's Chambers</option>
+      <option value="St Johns Buildings">St Johns Buildings</option>
+      <option value="St Philips Chambers">St Philips Chambers</option>
+      <option value="Twenty Essex">Twenty Essex</option>
+      <option value="Wilberforce Chambers">Wilberforce Chambers</option>
+      <option value="__other__">Other (enter manually)...</option>
+    </select>
+    <input type="text" id="chambers-custom" class="chambers-custom" placeholder="Enter chambers name">
+    <span class="ctrl-hint" id="chambers-hint">Select the chambers to apply to all entries</span>
+  </div>
+
+  <!-- File input -->
+  <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none">
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div class="drop-icon">📂</div>
+    <div class="drop-label" id="drop-label">Drop a LEX or Meridian Payment Summary here, or click to browse</div>
+    <div class="drop-hint">.xlsx / .xls — format detected automatically</div>
+  </div>
+
+  <div class="error" id="err"></div>
+
+  <div id="results">
+
+    <!-- Meridian-only info cards (hidden for LEX) -->
+    <div class="info-grid" id="info-grid" style="display:none">
+      <div class="info-card">
+        <div class="info-card-label" id="info-barrister-label">Barrister</div>
+        <div class="info-card-value accent" id="info-barrister">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label" id="info-period-label">Period</div>
+        <div class="info-card-value" id="info-period">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">Sheet</div>
+        <div class="info-card-value" id="info-records">—</div>
+      </div>
+    </div>
+
+    <!-- VAT check -->
+    <div class="vat-check">
+      <div class="vat-check-title">VAT Check</div>
+      <div class="vat-grid">
+        <div class="vat-cell">
+          <span class="vat-cell-label" id="vat-our-label">Our VAT (sum of Amount ÷ 6 for 20% rows)</span>
+          <span class="vat-cell-value" id="vat-ours">—</span>
+        </div>
+        <div class="vat-cell">
+          <span class="vat-cell-label" id="vat-src-label">Source VAT (from report totals)</span>
+          <span class="vat-cell-value" id="vat-src">—</span>
+        </div>
+        <div class="vat-cell">
+          <span class="vat-cell-label">Result</span>
+          <span class="match-badge" id="vat-badge" style="margin-top:2px;"></span>
+        </div>
+      </div>
+      <div id="vat-warning" style="display:none; margin-top:0.75rem; padding:0.5rem 0.75rem; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:6px; font-size:0.72rem; color:#fbbf24;"></div>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="summary-bar">
+      <div class="chip"><span class="chip-label">Entries</span><strong id="c-entries">0</strong></div>
+      <div class="chip"><span class="chip-label">Our total</span><strong id="c-total">—</strong></div>
+      <div class="chip"><span class="chip-label" id="src-total-label">Source total</span><strong id="c-src">—</strong></div>
+      <span class="match-badge" id="match-badge"></span>
+      <button class="copy-btn" id="copy-btn" onclick="copyCSV()">&#9003; Copy CSV</button>
+      <button class="copy-btn dl" onclick="downloadCSV()">&#8659; Download All CSV</button>
+      <button class="copy-btn dl march-btn" id="march-btn" onclick="downloadMarchCSV()" title="Download rows dated 01/03/2026 – 31/03/2026 only">&#8659; Download Mar 2026</button>
+    </div>
+
+    <!-- Meridian-only legend -->
+    <div class="legend" id="legend" style="display:none">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:rgba(52,211,153,0.25); border:1px solid rgba(52,211,153,0.4)"></div>
+        Fees only
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:rgba(74,158,255,0.2); border:1px solid rgba(74,158,255,0.3)"></div>
+        Expenses only
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.3)"></div>
+        Fees + Expenses (combined)
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:rgba(251,191,36,0.3); border:1px solid #fbbf24"></div>
+        VAT% = 20 but £0 VAT charged — treated as Zero Rated
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>*Date</th><th>*Amount</th><th>Payee</th><th>Description</th><th>*TaxType</th><th>Reference</th><th>*AccountCode</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body"></tbody>
+        <tfoot>
+          <tr>
+            <td class="foot-label">Total</td>
+            <td class="amt" id="foot-total"></td>
+            <td colspan="5"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="sheet-note" id="sheet-note"></p>
+
+  </div><!-- #results -->
+</div><!-- .container -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+var parsedRows    = [];
+var accountCode   = '100';
+var selectedChambers = 'Chambers';
+var detectedFormat   = null;  // 'lex' | 'meridian'
+var reportBarrister  = '';    // full name for CSV filename
+var reportPeriod     = '';    // period string for CSV filename
+var reportCode       = '';    // barrister code/initials for CSV filename (CPX, CI, etc.)
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function fmt(n) { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(n); }
+function round2(n) { return Math.round(n * 100) / 100; }
+
+function showErr(msg) {
+  document.getElementById('err').textContent = 'Error: ' + msg;
+  document.getElementById('err').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+}
+
+function fmtDate(val) {
+  if (!val) return '';
+  if (typeof val === 'number') {
+    var d = XLSX.SSF.parse_date_code(val);
+    return String(d.d).padStart(2,'0') + '/' + String(d.m).padStart(2,'0') + '/' + d.y;
+  }
+  return String(val);
+}
+
+// ── Controls ───────────────────────────────────────────────────────────────
+function setAccountCode(code) {
+  accountCode = code;
+  document.getElementById('pill-100').className = 'toggle-pill' + (code === '100' ? ' active' : '');
+  document.getElementById('pill-200').className = 'toggle-pill' + (code === '200' ? ' active' : '');
+  document.querySelectorAll('.ac-cell').forEach(function(c){ c.textContent = code; });
+}
+
+function setChambers(val) {
+  var ci   = document.getElementById('chambers-custom');
+  var hint = document.getElementById('chambers-hint');
+  if (val === '__other__') {
+    ci.style.display = 'inline-block'; ci.focus();
+    hint.textContent = 'Type the chambers name above';
+    selectedChambers = ci.value || '';
+  } else {
+    ci.style.display = 'none';
+    hint.textContent = 'Select the chambers to apply to all entries';
+    selectedChambers = val;
+  }
+  document.querySelectorAll('.payee-cell').forEach(function(c){ c.textContent = selectedChambers; });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('chambers-custom').addEventListener('input', function() {
+    selectedChambers = this.value;
+    document.querySelectorAll('.payee-cell').forEach(function(c){ c.textContent = selectedChambers; });
+  });
+});
+
+// ── Apply format-specific theming ──────────────────────────────────────────
+function applyTheme(format) {
+  detectedFormat = format;
+  var isLex = format === 'lex';
+  var accentHex  = isLex ? '#4a9eff' : '#a78bfa';
+  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : 'rgba(167,139,250,0.05)';
+
+  // Update CSS variable on root so all var(--accent) references update
+  document.documentElement.style.setProperty('--accent', accentHex);
+
+  // Drop zone hover background
+  var styleEl = document.getElementById('dynamic-style');
+  if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'dynamic-style'; document.head.appendChild(styleEl); }
+  styleEl.textContent = '.drop-zone:hover,.drop-zone.dragging{background:' + accentRgba + ';}';
+
+  // Format badge
+  var badge = document.getElementById('format-badge');
+  badge.className = 'format-badge ' + format;
+  document.getElementById('format-badge-text').textContent = isLex ? 'LEX detected' : 'Meridian detected';
+
+  // Header tag
+  document.getElementById('hdr-tag').textContent = isLex ? 'LEX' : 'Meridian';
+
+  // Copy button colours
+  var copyBtn = document.getElementById('copy-btn');
+  if (isLex) {
+    copyBtn.style.background    = '#1a3a6e';
+    copyBtn.style.borderColor   = '#2a5298';
+    copyBtn.style.color         = '#7ab3ff';
+  } else {
+    copyBtn.style.background    = '#2a1a6e';
+    copyBtn.style.borderColor   = '#4a2aae';
+    copyBtn.style.color         = '#c4b5fd';
+  }
+
+  // Legend is Meridian-only; info-grid is shown for both
+  document.getElementById('info-grid').style.display  = 'grid';
+  document.getElementById('legend').style.display     = isLex ? 'none' : 'flex';
+
+  // Info card labels differ by format
+  document.getElementById('info-barrister-label').textContent = isLex ? 'Barrister(s)' : 'Barrister';
+  document.getElementById('info-period-label').textContent    = 'Period';
+
+  // VAT label wording
+  document.getElementById('vat-src-label').textContent = isLex ? 'LEX VAT (from report totals)' : 'Meridian VAT (from Barrister Total row)';
+  document.getElementById('src-total-label').textContent = isLex ? 'LEX total' : 'Meridian total';
+
+  // TaxType cell colour class: LEX uses blue (.blue-cell), Meridian uses purple (.purple)
+  // Applied per-row at render time via r.taxClass
+}
+
+// ── Format detection ───────────────────────────────────────────────────────
+// Returns 'lex', 'meridian', or null.
+function detectFormat(wb) {
+  var skip = ['REPORT TOTALS','ALL BARRISTERS','Case Type Totals','Case Funding Totals'];
+  var hasLex = wb.SheetNames.some(function(n) {
+    if (skip.indexOf(n) !== -1) return false;
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
+    return rows.some(function(r) {
+      return r && r.some(function(c) {
+        return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1;
+      });
+    });
+  });
+  if (hasLex) return 'lex';
+
+  var hasMeridian = wb.SheetNames.some(function(n) {
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null, raw: true });
+    return rows.some(function(r) {
+      return r && r.some(function(c) {
+        return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1;
+      });
+    });
+  });
+  if (hasMeridian) return 'meridian';
+
+  return null;
+}
+
+// ── Main file handler ──────────────────────────────────────────────────────
+function parseFile(file) {
+  document.getElementById('err').style.display = 'none';
+  var lbl = document.getElementById('drop-label');
+  lbl.textContent = file.name;
+  lbl.classList.add('active');
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, { type: 'array', cellDates: false, raw: true });
+      var format = detectFormat(wb);
+      if (!format) {
+        showErr('Unrecognised file — could not find a CASE ID (LEX) or CASE NO (Meridian) header column. Please check this is a LEX or Meridian Payment Summary.');
+        return;
+      }
+      applyTheme(format);
+      if (format === 'lex') {
+        parseLex(wb);
+      } else {
+        parseMeridian(wb);
+      }
+    } catch(ex) { showErr(ex.message + (ex.stack ? ' — ' + ex.stack.split('\n')[1] : '')); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// LEX PARSER  (from lex_payment_parser_v3.html — unchanged logic)
+// ════════════════════════════════════════════════════════════════════════════
+function parseLex(wb) {
+  var skip = ['REPORT TOTALS','ALL BARRISTERS','Case Type Totals','Case Funding Totals'];
+
+  function extractTotalsFromRows(rows, totalColHint, vatColHint) {
+    var totalPatterns = [
+      /total\s*pyt|pyt\s*total/i, /pyt\s*total/i, /total\s*payments?/i,
+      /^totals?\s*\(/i, /^totals?$/i, /^payments?$/i, /^payment$/i,
+    ];
+    for (var pi = 0; pi < totalPatterns.length; pi++) {
+      for (var ri = 0; ri < rows.length; ri++) {
+        var row = rows[ri]; if (!row) continue;
+        for (var ci = 0; ci < row.length; ci++) {
+          if (typeof row[ci] === 'string' && totalPatterns[pi].test(row[ci].trim())) {
+            var tot = null, vat = null;
+            if (totalColHint !== -1 && typeof row[totalColHint] === 'number') tot = row[totalColHint];
+            if (vatColHint  !== -1 && typeof row[vatColHint]   === 'number') vat = row[vatColHint];
+            if (tot === null || vat === null) {
+              var nums = row.filter(function(v){ return typeof v === 'number'; });
+              if (tot === null) { if (typeof row[1] === 'number') tot = row[1]; else if (nums.length > 0) tot = nums[0]; }
+              if (vat === null) { if (typeof row[3] === 'number') vat = row[3]; else if (nums.length > 1) vat = nums[1]; }
+            }
+            if (tot !== null) return { total: tot, vat: vat };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  var psSheets = wb.SheetNames.filter(function(n) {
+    if (skip.indexOf(n) !== -1) return false;
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
+    return rows.some(function(r) {
+      return r && r.some(function(c) {
+        return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1;
+      });
+    });
+  });
+
+  parsedRows = [];
+  var totalPyt = null, lexVat = null, sheetTotals = [];
+
+  for (var si = 0; si < psSheets.length; si++) {
+    var sheetName = psSheets[si];
+    var ws  = wb.Sheets[sheetName];
+    var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+
+    var headerIdx = -1;
+    for (var i = 0; i < raw.length; i++) {
+      if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1; })) {
+        headerIdx = i; break;
+      }
+    }
+    if (headerIdx === -1) continue;
+
+    var headers = raw[headerIdx].map(function(h){ return h ? String(h).toUpperCase().trim() : ''; });
+    function colExact(name) { return headers.findIndex(function(h){ return h === name; }); }
+    function col(name) { var e = colExact(name); return e !== -1 ? e : headers.findIndex(function(h){ return h.indexOf(name) !== -1; }); }
+
+    var caseIdC  = col('CASE ID'),  companyC = col('COMPANY'), titleC = col('CASE TITLE');
+    var receivedC= col('RECEIVED'), vatPctC  = col('VAT%'),    amountC = col('TOTAL');
+    var taxnoC   = col('TAXNO'),    vatAmtC  = colExact('VAT');
+
+    var outStart = -1;
+    for (var i = headerIdx; i < raw.length; i++) {
+      if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().trim() === 'PAYMENTS OUT'; })) {
+        outStart = i; break;
+      }
+    }
+
+    var st = extractTotalsFromRows(raw, amountC !== -1 ? amountC : -1, vatAmtC !== -1 ? vatAmtC : -1);
+    if (st) sheetTotals.push(st);
+
+    for (var i = headerIdx + 1; i < raw.length; i++) {
+      var row = raw[i]; if (!row) continue;
+      var cid = row[caseIdC]; if (!cid) continue;
+      var cidStr = String(cid).trim();
+      if (!cidStr || !/^\d/.test(cidStr)) continue;
+
+      var isOut      = outStart !== -1 && i > outStart;
+      var amount     = typeof row[amountC] === 'number' ? row[amountC] : parseFloat(row[amountC]) || 0;
+      var finalAmt   = isOut ? -amount : amount;
+      var vatPct     = typeof row[vatPctC] === 'number' ? row[vatPctC] : parseFloat(row[vatPctC]);
+      var effectiveVat = typeof row[vatAmtC] === 'number' ? row[vatAmtC] : parseFloat(row[vatAmtC]) || 0;
+      var taxType    = (vatPct >= 0.15) || (isNaN(vatPct) && Math.abs(effectiveVat) > 0)
+        ? '20% (VAT on Income)' : 'Zero Rated Income';
+      var company    = row[companyC] ? String(row[companyC]).trim() : '';
+      var title      = (titleC !== -1 && row[titleC] && String(row[titleC]).trim()) ? String(row[titleC]).trim() : 'Anonymised';
+      var taxno      = row[taxnoC] ? String(row[taxnoC]).trim() : '';
+      var descParts  = psSheets.length > 1 ? [cidStr, sheetName, company, title] : [cidStr, company, title];
+      var description = descParts.filter(Boolean).join(' | ');
+
+      var noVatPct = isNaN(vatPct) && taxType === '20% (VAT on Income)';
+      if (noVatPct && Math.abs(effectiveVat) > 0) {
+        var sign     = finalAmt < 0 ? -1 : 1;
+        var absVat   = Math.abs(effectiveVat);
+        var cleanAmt = Math.round(absVat * 6 * 100) / 100;
+        var adjAmt   = Math.round((Math.abs(finalAmt) - cleanAmt) * 100) / 100;
+        parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * cleanAmt, description: description,
+          taxType: '20% (VAT on Income)', reference: isOut ? description : taxno,
+          isOut: isOut, noVatPct: true, taxClass: 'blue' });
+        if (Math.abs(adjAmt) >= 0.01) {
+          parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * adjAmt, description: description + ' | adjustment',
+            taxType: 'Zero Rated Income', reference: isOut ? description : taxno,
+            isOut: isOut, noVatPct: false, isAdj: true, taxClass: 'blue' });
+        }
+      } else {
+        parsedRows.push({ date: fmtDate(row[receivedC]), amount: finalAmt, description: description,
+          taxType: taxType, reference: isOut ? description : taxno,
+          isOut: isOut, noVatPct: false, taxClass: 'blue' });
+      }
+    }
+  }
+
+  // Aggregate LEX totals
+  if (sheetTotals.length > 0) {
+    totalPyt = sheetTotals.reduce(function(s,t){ return s + t.total; }, 0);
+    lexVat   = sheetTotals.every(function(t){ return t.vat !== null; })
+      ? sheetTotals.reduce(function(s,t){ return s + t.vat; }, 0) : null;
+  }
+  if (totalPyt === null) {
+    var rtSheet = wb.Sheets['REPORT TOTALS'];
+    if (rtSheet) {
+      var rtRaw = XLSX.utils.sheet_to_json(rtSheet, { header: 1, defval: null });
+      var s2 = extractTotalsFromRows(rtRaw, -1, -1);
+      if (s2) { totalPyt = s2.total; lexVat = s2.vat; }
+    }
+  }
+
+  // VAT check
+  var ourVat = parsedRows.reduce(function(s,r){ return r.taxType === '20% (VAT on Income)' ? s + (r.amount / 6) : s; }, 0);
+  document.getElementById('vat-ours').textContent = fmt(ourVat);
+  document.getElementById('vat-ours').className   = 'vat-cell-value ' + (ourVat >= 0 ? 'pos' : 'neg');
+  document.getElementById('vat-src').textContent  = lexVat !== null ? fmt(lexVat) : 'n/a';
+  var vatBadge = document.getElementById('vat-badge');
+  if (lexVat !== null) {
+    var vm = Math.abs(ourVat - lexVat) < 0.02;
+    vatBadge.textContent = vm ? '✓ VAT matches' : '✗ Difference: ' + fmt(ourVat - lexVat);
+    vatBadge.className = 'match-badge ' + (vm ? 'ok' : 'err');
+  } else { vatBadge.textContent = 'LEX VAT not found'; vatBadge.className = 'match-badge err'; }
+
+  var noVatPctRows = parsedRows.filter(function(r){ return r.noVatPct; });
+  var vatWarn = document.getElementById('vat-warning');
+  if (noVatPctRows.length > 0) {
+    vatWarn.textContent = '⚠ ' + noVatPctRows.length + ' row' + (noVatPctRows.length > 1 ? 's have' : ' has') +
+      ' an empty VAT% — VAT was calculated by LEX on a different base. See rows highlighted in the table.';
+    vatWarn.style.display = 'block';
+  } else { vatWarn.style.display = 'none'; }
+
+  // ── LEX info cards ────────────────────────────────────────────────────────
+  // The first row of each barrister sheet contains a header string like:
+  // "Payment Summary Report For Mr Christopher Pix (CPX) from 01/12/2025 to 28/02/2026 - Generated ..."
+  // Extract the full name and period from this string.
+  var lexBarrister = psSheets.join(', ');  // fallback to sheet initials
+  var lexPeriod    = '—';
+
+  var firstWs  = wb.Sheets[psSheets[0]];
+  var firstRaw = XLSX.utils.sheet_to_json(firstWs, { header: 1, defval: null });
+  for (var pi = 0; pi < Math.min(10, firstRaw.length); pi++) {
+    var pr = firstRaw[pi]; if (!pr) continue;
+    for (var pj = 0; pj < pr.length; pj++) {
+      if (typeof pr[pj] !== 'string') continue;
+      var cell = pr[pj].trim();
+
+      // Full name: "Payment Summary Report For Mr Firstname Lastname (ABC) from ..."
+      // Capture everything between "For " and " from" as the barrister name
+      var nameMatch = cell.match(/\bfor\s+(.+?)\s+from\s+\d{2}\/\d{2}\/\d{4}/i);
+      if (nameMatch) lexBarrister = nameMatch[1].trim();
+
+      // Period: "from DD/MM/YYYY to DD/MM/YYYY"
+      var periodMatch = cell.match(/from\s+(\d{2}\/\d{2}\/\d{4}\s+to\s+\d{2}\/\d{2}\/\d{4})/i);
+      if (periodMatch) lexPeriod = periodMatch[1].trim();
+
+      if (lexBarrister !== psSheets.join(', ') && lexPeriod !== '—') break;
+    }
+    if (lexBarrister !== psSheets.join(', ') && lexPeriod !== '—') break;
+  }
+
+  document.getElementById('info-barrister').textContent = lexBarrister;
+  document.getElementById('info-period').textContent    = lexPeriod;
+  // Sheets card: show sheet name(s) (the barrister initials/code used by LEX)
+  document.getElementById('info-records').textContent   = psSheets.join(', ');
+  reportBarrister = lexBarrister;
+  reportPeriod    = lexPeriod;
+  reportCode      = psSheets.join('_');
+
+  renderResults(totalPyt, psSheets.join(', '), 'Payments Out shown as negative');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MERIDIAN PARSER  (from meridian_payment_summary_parser.html — unchanged logic)
+// ════════════════════════════════════════════════════════════════════════════
+function parseMeridian(wb) {
+  var targetSheet = null;
+  for (var si = 0; si < wb.SheetNames.length; si++) {
+    var sn  = wb.SheetNames[si];
+    var raw = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: null, raw: true });
+    var hasCaseNo = raw.some(function(r) {
+      return r && r.some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1; });
+    });
+    if (hasCaseNo) { targetSheet = sn; break; }
+  }
+  if (!targetSheet) { showErr('Could not find a Meridian Payment Summary sheet (no Case No column).'); return; }
+
+  var ws  = wb.Sheets[targetSheet];
+  var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+
+  var barristerText = '', periodText = '';
+  for (var i = 0; i < Math.min(10, raw.length); i++) {
+    var r = raw[i]; if (!r) continue;
+    for (var j = 0; j < r.length; j++) {
+      if (typeof r[j] !== 'string') continue;
+      var cell = r[j].trim();
+      if (/^barrister\s*:/i.test(cell))  barristerText = cell.replace(/^barrister\s*:\s*/i, '').trim();
+      if (/^period\s*:/i.test(cell))     periodText    = cell.replace(/^period\s*:\s*/i,    '').trim();
+    }
+  }
+
+  var headerIdx = -1;
+  for (var i = 0; i < raw.length; i++) {
+    if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1; })) {
+      headerIdx = i; break;
+    }
+  }
+  if (headerIdx === -1) { showErr('Could not find header row (Case No column).'); return; }
+
+  var headers = raw[headerIdx].map(function(h){ return h ? String(h).toUpperCase().replace(/\s+/g,' ').trim() : ''; });
+  function colOf(name) {
+    var e = headers.findIndex(function(h){ return h === name; });
+    return e !== -1 ? e : headers.findIndex(function(h){ return h.indexOf(name) !== -1; });
+  }
+
+  var COL_CASENO = colOf('CASE NO'), COL_TITLE  = colOf('CASE TITLE'), COL_SOLR  = colOf('SOLICITOR');
+  var COL_DATE   = colOf('DATE'),    COL_INVNO  = colOf('INV NO'),     COL_VATPCT = colOf('%');
+  var COL_TOTAL  = colOf('TOTAL PAID');
+  var COL_FEES = -1, COL_EXP = -1, COL_VATFEES = -1, COL_VATEXP = -1;
+
+  var feesOcc = [], expOcc = [];
+  headers.forEach(function(h,idx){ if (h === 'FEES') feesOcc.push(idx); if (h === 'EXPENSES') expOcc.push(idx); });
+  if (feesOcc.length === 0) headers.forEach(function(h,idx){ if (h.indexOf('FEES')     !== -1) feesOcc.push(idx); });
+  if (expOcc.length  === 0) headers.forEach(function(h,idx){ if (h.indexOf('EXPENSES') !== -1) expOcc.push(idx); });
+  if (feesOcc.length >= 2) { COL_FEES = feesOcc[0]; COL_VATFEES = feesOcc[1]; }
+  if (expOcc.length  >= 2) { COL_EXP  = expOcc[0];  COL_VATEXP  = expOcc[1]; }
+
+  parsedRows = [];
+  var meridianTotal = null, meridianVatFees = null, meridianVatExp = null;
+
+  for (var i = headerIdx + 1; i < raw.length; i++) {
+    var row = raw[i]; if (!row) continue;
+    var caseNoVal = row[COL_CASENO];
+
+    if (typeof caseNoVal === 'string') {
+      var cellStr = caseNoVal.trim();
+      if (/barrister\s+total/i.test(cellStr)) {
+        if (COL_TOTAL  !== -1 && typeof row[COL_TOTAL]  === 'number') meridianTotal   = row[COL_TOTAL];
+        if (COL_VATPCT !== -1 && typeof row[COL_VATPCT] === 'number') meridianVatFees = row[COL_VATPCT];
+        if (COL_VATEXP !== -1 && typeof row[COL_VATEXP] === 'number') meridianVatExp  = row[COL_VATEXP];
+      }
+      continue;
+    }
+
+    if (typeof caseNoVal !== 'number' || !caseNoVal) continue;
+
+    var caseNo    = String(Math.floor(caseNoVal));
+    var caseTitle = COL_TITLE !== -1 && row[COL_TITLE] ? String(row[COL_TITLE]).trim() : '';
+    var solicitor = COL_SOLR  !== -1 && row[COL_SOLR]  ? String(row[COL_SOLR]).trim()  : '';
+    var invNo     = COL_INVNO !== -1 && row[COL_INVNO] ? String(Math.floor(row[COL_INVNO])) : '';
+    var dateVal   = COL_DATE  !== -1 ? row[COL_DATE] : null;
+    var dateStr   = dateVal ? String(dateVal).trim() : '';
+    if (typeof dateVal === 'number') {
+      var pd = XLSX.SSF.parse_date_code(dateVal);
+      dateStr = String(pd.d).padStart(2,'0') + '/' + String(pd.m).padStart(2,'0') + '/' + pd.y;
+    }
+
+    var fees     = COL_FEES    !== -1 && typeof row[COL_FEES]    === 'number' ? row[COL_FEES]    : 0;
+    var exps     = COL_EXP     !== -1 && typeof row[COL_EXP]     === 'number' ? row[COL_EXP]     : 0;
+    var vatPct   = COL_VATPCT  !== -1 && typeof row[COL_VATPCT]  === 'number' ? row[COL_VATPCT]  : 0;
+    var vatFees  = COL_VATFEES !== -1 && typeof row[COL_VATFEES] === 'number' ? row[COL_VATFEES] : 0;
+    var vatExp   = COL_VATEXP  !== -1 && typeof row[COL_VATEXP]  === 'number' ? row[COL_VATEXP]  : 0;
+    var totalPaid = COL_TOTAL  !== -1 && typeof row[COL_TOTAL]   === 'number' ? row[COL_TOTAL]   : 0;
+
+    if (totalPaid === 0) continue;
+
+    var actualVat = Math.abs(vatFees) + Math.abs(vatExp);
+    var taxType   = (vatPct >= 15 && actualVat > 0) ? '20% (VAT on Income)' : 'Zero Rated Income';
+
+    var descParts   = [caseNo, invNo ? 'Inv ' + invNo : '', solicitor, caseTitle].filter(Boolean);
+    var description = descParts.join(' | ');
+
+    var vatOverride = (vatPct >= 15 && actualVat === 0);
+    var rowClass    = vatOverride ? 'row-vatoverride'
+      : (fees > 0 && exps > 0) ? 'row-mixed'
+      : (exps > 0 ? 'row-expenses' : 'row-in');
+
+    parsedRows.push({ date: dateStr, amount: round2(totalPaid), description: description,
+      taxType: taxType, reference: invNo, rowClass: rowClass,
+      vatOverride: vatOverride, taxClass: 'purple' });
+  }
+
+  if (parsedRows.length === 0) { showErr('No payment rows found. Check that the file is a Meridian Payment Summary.'); return; }
+
+  // Metadata cards
+  document.getElementById('info-barrister').textContent = barristerText || '—';
+  document.getElementById('info-period').textContent    = periodText    || '—';
+  document.getElementById('info-records').textContent   = targetSheet;
+  reportBarrister = barristerText;
+  reportPeriod    = periodText;
+  // Extract initials from brackets e.g. "Mr. Clement Idowu (CI)" → "CI"
+  var codeMatch = barristerText.match(/\(([^)]+)\)\s*$/);
+  reportCode = codeMatch ? codeMatch[1].trim() : '';
+
+  // VAT override warning
+  var overrideRows = parsedRows.filter(function(r){ return r.vatOverride; });
+  var vatWarn = document.getElementById('vat-warning');
+  if (overrideRows.length > 0) {
+    vatWarn.textContent = '⚠ ' + overrideRows.length + ' row' + (overrideRows.length > 1 ? 's have' : ' has') +
+      ' VAT% = 20 but £0 VAT recorded — treated as Zero Rated Income. See rows highlighted in amber.';
+    vatWarn.style.display = 'block';
+  } else { vatWarn.style.display = 'none'; }
+
+  // VAT check
+  var ourVat = round2(parsedRows.reduce(function(s,r){
+    return r.taxType === '20% (VAT on Income)' ? s + round2(r.amount / 6) : s;
+  }, 0));
+  var meridianVat = (meridianVatFees !== null || meridianVatExp !== null)
+    ? round2((meridianVatFees || 0) + (meridianVatExp || 0)) : null;
+
+  document.getElementById('vat-ours').textContent = fmt(ourVat);
+  document.getElementById('vat-src').textContent  = meridianVat !== null ? fmt(meridianVat) : 'n/a';
+  var vatBadge = document.getElementById('vat-badge');
+  if (meridianVat !== null) {
+    var vm = Math.abs(ourVat - meridianVat) < 0.02;
+    vatBadge.textContent = vm ? '✓ VAT matches' : '✗ Difference: ' + fmt(ourVat - meridianVat);
+    vatBadge.className = 'match-badge ' + (vm ? 'ok' : 'err');
+  } else { vatBadge.textContent = 'Meridian VAT not found'; vatBadge.className = 'match-badge err'; }
+
+  renderResults(meridianTotal, targetSheet, 'All amounts are payments in (positive)');
+}
+
+// ── Shared results renderer ────────────────────────────────────────────────
+function renderResults(sourceTotal, sheetLabel, noteText) {
+  var ourTotal = round2(parsedRows.reduce(function(s,r){ return s + r.amount; }, 0));
+  var match    = sourceTotal !== null && Math.abs(round2(sourceTotal) - ourTotal) < 0.02;
+
+  document.getElementById('c-entries').textContent = parsedRows.length;
+  document.getElementById('c-total').textContent   = fmt(ourTotal);
+  document.getElementById('c-src').textContent     = sourceTotal !== null ? fmt(round2(sourceTotal)) : 'n/a';
+
+  var badge = document.getElementById('match-badge');
+  badge.textContent = match ? '✓ Totals match' : '✗ Difference: ' + fmt(ourTotal - (sourceTotal || 0));
+  badge.className   = 'match-badge ' + (match ? 'ok' : 'err');
+
+  var tbody = document.getElementById('tbl-body');
+  tbody.innerHTML = '';
+  parsedRows.forEach(function(r) {
+    var tr = document.createElement('tr');
+    // LEX rows use isAdj / noVatPct / isOut for class; Meridian rows have rowClass set directly
+    if (r.rowClass) {
+      tr.className = r.rowClass;
+    } else {
+      tr.className = r.isAdj ? 'row-adj' : (r.noVatPct ? 'row-vatwarning' : (r.isOut ? 'row-out' : 'row-in'));
+    }
+    tr.innerHTML =
+      '<td>' + r.date + '</td>' +
+      '<td class="amt ' + (r.amount < 0 ? 'neg' : 'pos') + '">' + fmt(r.amount) + '</td>' +
+      '<td class="muted-txt payee-cell">' + selectedChambers + '</td>' +
+      '<td class="desc" title="' + r.description.replace(/"/g,'&quot;') + '">' + r.description + '</td>' +
+      '<td class="' + (r.taxClass || 'slate') + '" style="white-space:nowrap">' + r.taxType + '</td>' +
+      '<td class="slate desc" title="' + r.reference.replace(/"/g,'&quot;') + '">' + r.reference + '</td>' +
+      '<td class="amber ac-cell">' + accountCode + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  var ft = document.getElementById('foot-total');
+  ft.textContent = fmt(ourTotal);
+  ft.className   = 'amt ' + (ourTotal >= 0 ? 'pos' : 'neg');
+
+  document.getElementById('sheet-note').innerHTML = 'Sheet(s): <span>' + sheetLabel + '</span> &middot; ' + noteText;
+  document.getElementById('results').style.display = 'block';
+  updateMarchBtn();
+}
+
+// ── CSV export ─────────────────────────────────────────────────────────────
+function buildCSV() {
+  var lines = ['*Date,*Amount,Payee,Description,*TaxType,Reference,*AccountCode'];
+  parsedRows.forEach(function(r) {
+    lines.push([
+      r.date, r.amount.toFixed(2),
+      '"' + selectedChambers.replace(/"/g,'""') + '"',
+      '"' + r.description.replace(/"/g,'""') + '"',
+      r.taxType,
+      '"' + r.reference.replace(/"/g,'""') + '"',
+      accountCode
+    ].join(','));
+  });
+  return lines.join('\n');
+}
+function copyCSV()     { if (parsedRows.length) navigator.clipboard.writeText(buildCSV()); }
+function buildFilename() {
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Primary: barrister code (CPX, CI, ACD etc.)
+  // Fallback 1: barrister name stripped of title and with spaces as underscores
+  // Fallback 2: Unknown
+  var code = reportCode.replace(/[^a-zA-Z0-9_\-]/g, '');
+  if (!code) {
+    code = reportBarrister
+      .replace(/^(mr\.?|mrs\.?|ms\.?|miss\.?|dr\.?|sir\.?|lord\.?|lady\.?)\s+/i, '')
+      .replace(/\([^)]*\)\s*$/, '')  // strip trailing (initials) if present
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9_\-]/g, '');
+  }
+  if (!code) code = 'Unknown';
+
+  // Parse period string: expects "DD/MM/YYYY to DD/MM/YYYY"
+  var suffix = 'payment_summary';  // fallback
+  var m = reportPeriod.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m) {
+    var startMonth = parseInt(m[2], 10);
+    var startYear  = parseInt(m[3], 10);
+    var endMonth   = parseInt(m[5], 10);
+    var endYear    = parseInt(m[6], 10);
+    var endMonthName = MONTHS[endMonth - 1];
+    suffix = (startMonth === endMonth && startYear === endYear)
+      ? endMonthName + endYear
+      : 'QE' + endMonthName + endYear;
+  }
+
+  return code + '_PS_' + suffix + '.csv';
+}
+
+function downloadCSV() {
+  if (!parsedRows.length) return;
+  var blob = new Blob([buildCSV()], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = buildFilename();
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ── March 2026 filter ──────────────────────────────────────────────────────
+function isMarch2026(dateStr) {
+  // Handles DD/MM/YYYY and DD/MM/YY formats
+  if (!dateStr) return false;
+  var m = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+  if (!m) return false;
+  var month = parseInt(m[2], 10);
+  var year  = parseInt(m[3], 10);
+  if (year < 100) year += 2000; // two-digit year: 26 → 2026
+  return month === 3 && year === 2026;
+}
+
+function getMarchRows() {
+  return parsedRows.filter(function(r){ return isMarch2026(r.date); });
+}
+
+function buildMarchCSV() {
+  var rows = getMarchRows();
+  if (rows.length === 0) return null;
+  var lines = ['*Date,*Amount,Payee,Description,*TaxType,Reference,*AccountCode'];
+  rows.forEach(function(r) {
+    lines.push([
+      r.date, r.amount.toFixed(2),
+      '"' + selectedChambers.replace(/"/g,'""') + '"',
+      '"' + r.description.replace(/"/g,'""') + '"',
+      r.taxType,
+      '"' + r.reference.replace(/"/g,'""') + '"',
+      accountCode
+    ].join(','));
+  });
+  return lines.join('\n');
+}
+
+function downloadMarchCSV() {
+  var csv = buildMarchCSV();
+  if (!csv) { alert('No rows found for March 2026 (01/03/2026 – 31/03/2026).'); return; }
+  var baseName = buildFilename().replace(/\.csv$/i, '');
+  // Override suffix with Mar2026 regardless of detected period
+  var filename = baseName.replace(/_PS_.+$/, '') + '_PS_Mar2026.csv';
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+// Update March button state after results render
+function updateMarchBtn() {
+  var btn = document.getElementById('march-btn');
+  if (!btn) return;
+  var count = getMarchRows().length;
+  btn.disabled = count === 0;
+  btn.title = count > 0
+    ? 'Download ' + count + ' row' + (count === 1 ? '' : 's') + ' dated 01/03/2026 – 31/03/2026'
+    : 'No rows found for March 2026';
+}
+
+// ── Drag & drop / file input ───────────────────────────────────────────────
+var dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover',  function(e){ e.preventDefault(); dz.classList.add('dragging'); });
+dz.addEventListener('dragleave', function(){ dz.classList.remove('dragging'); });
+dz.addEventListener('drop', function(e){
+  e.preventDefault(); dz.classList.remove('dragging');
+  var f = e.dataTransfer.files[0]; if (f) parseFile(f);
+});
+document.getElementById('file-input').addEventListener('change', function(e){
+  if (e.target.files[0]) parseFile(e.target.files[0]);
+});
+</script>
+</body>
+</html>
