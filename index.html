@@ -16,6 +16,7 @@
     --green: #34d399; --red: #fb7185;
     --lex-accent: #4a9eff;
     --mer-accent: #a78bfa;
+    --mtd-accent: #2dd4bf;
     --slate: #94a3b8; --amber: #fbbf24;
   }
   body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono','Courier New',monospace; min-height: 100vh; padding: 2.5rem 2rem; }
@@ -42,6 +43,8 @@
   .format-badge .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
   .format-badge.lex .dot { background: var(--lex-accent); }
   .format-badge.mer .dot { background: var(--mer-accent); }
+  .format-badge.mtd { display: inline-flex; background: rgba(45,212,191,0.12); border: 1px solid rgba(45,212,191,0.4); color: var(--mtd-accent); }
+  .format-badge.mtd .dot { background: var(--mtd-accent); }
 
   /* ── Controls ── */
   .control-row {
@@ -116,9 +119,18 @@
   /* copy btn colours set dynamically via JS when format is known */
   .copy-btn.dl { background: #1a3a1a; border-color: #2a6a2a; color: #86efac; }
   .copy-btn.dl:hover { background: #2a5a2a; }
-  .copy-btn.march-btn { background: #2a1a3a; border-color: #6a3a8a; color: #d8b4fe; }
-  .copy-btn.march-btn:hover { background: #3a2a5a; }
+  .copy-btn.bank-btn { background: #1e2a3a; border-color: #3a5a7a; color: #93c5fd; }
+  .copy-btn.bank-btn:hover { background: #263548; }
+  .copy-btn.march-btn { background: #1e2a3a; border-color: #3a5a7a; color: #93c5fd; }
+  .copy-btn.march-btn:hover { background: #263548; }
   .copy-btn.march-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .copy-btn.sales-btn { background: #1a2e3a; border-color: #2a6a8a; color: #7dd3fc; }
+  .copy-btn.sales-btn:hover { background: #1e3a4a; }
+  .copy-btn.sales-march-btn { background: #1a2e3a; border-color: #2a6a8a; color: #7dd3fc; }
+  .copy-btn.sales-march-btn:hover { background: #1e3a4a; }
+  .copy-btn.sales-march-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-group-label { font-size: 0.62rem; color: var(--muted2); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; align-self: center; padding: 0 4px; }
+  .btn-separator { width: 1px; height: 22px; background: var(--border2); align-self: center; margin: 0 2px; }
 
   /* ── Table ── */
   .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
@@ -170,7 +182,7 @@
   <header>
     <div class="tag" id="hdr-tag">LEX &amp; Meridian</div>
     <h1>Payment Summary Parser</h1>
-    <p class="subtitle" id="hdr-sub">Supports LEX (.xlsx) and Meridian (.xls / .xlsx) — format detected automatically</p>
+    <p class="subtitle" id="hdr-sub">Supports LEX (.xlsx), Meridian (.xls / .xlsx) and MTD CB (.csv, up to 3 files) — format detected automatically</p>
   </header>
 
   <!-- Format detection badge -->
@@ -256,11 +268,11 @@
   </div>
 
   <!-- File input -->
-  <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none">
+  <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple style="display:none">
   <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
     <div class="drop-icon">📂</div>
-    <div class="drop-label" id="drop-label">Drop a LEX or Meridian Payment Summary here, or click to browse</div>
-    <div class="drop-hint">.xlsx / .xls — format detected automatically</div>
+    <div class="drop-label" id="drop-label">Drop LEX, Meridian or MTD CB files here, or click to browse</div>
+    <div class="drop-hint">.xlsx / .xls for LEX &amp; Meridian &middot; .csv for MTD CB (up to 3 files)</div>
   </div>
 
   <div class="error" id="err"></div>
@@ -310,8 +322,12 @@
       <div class="chip"><span class="chip-label" id="src-total-label">Source total</span><strong id="c-src">—</strong></div>
       <span class="match-badge" id="match-badge"></span>
       <button class="copy-btn" id="copy-btn" onclick="copyCSV()">&#9003; Copy CSV</button>
-      <button class="copy-btn dl" onclick="downloadCSV()">&#8659; Download All CSV</button>
-      <button class="copy-btn dl march-btn" id="march-btn" onclick="downloadMarchCSV()" title="Download rows dated 01/03/2026 – 31/03/2026 only">&#8659; Download Mar 2026</button>
+      <div class="btn-separator"></div>
+      <button class="copy-btn bank-btn" onclick="downloadCSV()">&#8659; Bank Xero CSV</button>
+      <button class="copy-btn dl march-btn" id="march-btn" onclick="downloadMarchCSV()" title="Download rows dated 01/03/2026 – 31/03/2026 only">&#8659; Bank Xero Mar 2026</button>
+      <div class="btn-separator"></div>
+      <button class="copy-btn sales-btn" onclick="downloadSalesCSV()">&#8659; Sales Xero CSV</button>
+      <button class="copy-btn sales-march-btn" id="sales-march-btn" onclick="downloadSalesMarchCSV()" title="Download Sales Invoice rows dated 01/03/2026 – 31/03/2026 only">&#8659; Sales Xero Mar 2026</button>
     </div>
 
     <!-- Meridian-only legend -->
@@ -419,51 +435,45 @@ document.addEventListener('DOMContentLoaded', function() {
 function applyTheme(format) {
   detectedFormat = format;
   var isLex = format === 'lex';
-  var accentHex  = isLex ? '#4a9eff' : '#a78bfa';
-  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : 'rgba(167,139,250,0.05)';
+  var isMtd = format === 'mtd';
+  var accentHex  = isLex ? '#4a9eff' : (isMtd ? '#2dd4bf' : '#a78bfa');
+  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : (isMtd ? 'rgba(45,212,191,0.05)' : 'rgba(167,139,250,0.05)');
 
-  // Update CSS variable on root so all var(--accent) references update
   document.documentElement.style.setProperty('--accent', accentHex);
 
-  // Drop zone hover background
   var styleEl = document.getElementById('dynamic-style');
   if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'dynamic-style'; document.head.appendChild(styleEl); }
   styleEl.textContent = '.drop-zone:hover,.drop-zone.dragging{background:' + accentRgba + ';}';
 
-  // Format badge
   var badge = document.getElementById('format-badge');
   badge.className = 'format-badge ' + format;
-  document.getElementById('format-badge-text').textContent = isLex ? 'LEX detected' : 'Meridian detected';
+  document.getElementById('format-badge-text').textContent = isLex ? 'LEX detected' : (isMtd ? 'MTD CB detected' : 'Meridian detected');
 
-  // Header tag
-  document.getElementById('hdr-tag').textContent = isLex ? 'LEX' : 'Meridian';
+  document.getElementById('hdr-tag').textContent = isLex ? 'LEX' : (isMtd ? 'MTD CB' : 'Meridian');
 
-  // Copy button colours
   var copyBtn = document.getElementById('copy-btn');
   if (isLex) {
-    copyBtn.style.background    = '#1a3a6e';
-    copyBtn.style.borderColor   = '#2a5298';
-    copyBtn.style.color         = '#7ab3ff';
+    copyBtn.style.background  = '#1a3a6e';
+    copyBtn.style.borderColor = '#2a5298';
+    copyBtn.style.color       = '#7ab3ff';
+  } else if (isMtd) {
+    copyBtn.style.background  = '#0f2e2e';
+    copyBtn.style.borderColor = '#1a6e6e';
+    copyBtn.style.color       = '#5eead4';
   } else {
-    copyBtn.style.background    = '#2a1a6e';
-    copyBtn.style.borderColor   = '#4a2aae';
-    copyBtn.style.color         = '#c4b5fd';
+    copyBtn.style.background  = '#2a1a6e';
+    copyBtn.style.borderColor = '#4a2aae';
+    copyBtn.style.color       = '#c4b5fd';
   }
 
-  // Legend is Meridian-only; info-grid is shown for both
   document.getElementById('info-grid').style.display  = 'grid';
-  document.getElementById('legend').style.display     = isLex ? 'none' : 'flex';
+  document.getElementById('legend').style.display     = (format === 'meridian') ? 'flex' : 'none';
 
-  // Info card labels differ by format
-  document.getElementById('info-barrister-label').textContent = isLex ? 'Barrister(s)' : 'Barrister';
+  document.getElementById('info-barrister-label').textContent = isLex ? 'Barrister(s)' : (isMtd ? 'Files' : 'Barrister');
   document.getElementById('info-period-label').textContent    = 'Period';
 
-  // VAT label wording
-  document.getElementById('vat-src-label').textContent = isLex ? 'LEX VAT (from report totals)' : 'Meridian VAT (from Barrister Total row)';
-  document.getElementById('src-total-label').textContent = isLex ? 'LEX total' : 'Meridian total';
-
-  // TaxType cell colour class: LEX uses blue (.blue-cell), Meridian uses purple (.purple)
-  // Applied per-row at render time via r.taxClass
+  document.getElementById('vat-src-label').textContent   = isLex ? 'LEX VAT (from report totals)' : (isMtd ? 'MTD CB VAT (sum from source)' : 'Meridian VAT (from Barrister Total row)');
+  document.getElementById('src-total-label').textContent = isLex ? 'LEX total' : (isMtd ? 'MTD CB total' : 'Meridian total');
 }
 
 // ── Format detection ───────────────────────────────────────────────────────
@@ -495,8 +505,25 @@ function detectFormat(wb) {
 }
 
 // ── Main file handler ──────────────────────────────────────────────────────
-function parseFile(file) {
+function parseFiles(files) {
   document.getElementById('err').style.display = 'none';
+  var csvFiles = Array.from(files).filter(function(f){ return f.name.toLowerCase().endsWith('.csv'); });
+  var xlsFiles = Array.from(files).filter(function(f){ return !f.name.toLowerCase().endsWith('.csv'); });
+
+  if (csvFiles.length > 0 && xlsFiles.length > 0) {
+    showErr('Please upload either MTD CB (.csv) files or a LEX/Meridian (.xlsx/.xls) file — not both at once.');
+    return;
+  }
+  if (csvFiles.length > 0) {
+    if (csvFiles.length > 3) { showErr('Maximum 3 MTD CB files at a time.'); return; }
+    var lbl = document.getElementById('drop-label');
+    lbl.textContent = csvFiles.map(function(f){ return f.name; }).join(', ');
+    lbl.classList.add('active');
+    parseMtdCsvFiles(csvFiles);
+    return;
+  }
+  if (xlsFiles.length > 1) { showErr('Please upload one LEX or Meridian file at a time.'); return; }
+  var file = xlsFiles[0];
   var lbl = document.getElementById('drop-label');
   lbl.textContent = file.name;
   lbl.classList.add('active');
@@ -511,15 +538,13 @@ function parseFile(file) {
         return;
       }
       applyTheme(format);
-      if (format === 'lex') {
-        parseLex(wb);
-      } else {
-        parseMeridian(wb);
-      }
+      if (format === 'lex') { parseLex(wb); } else { parseMeridian(wb); }
     } catch(ex) { showErr(ex.message + (ex.stack ? ' — ' + ex.stack.split('\n')[1] : '')); }
   };
   reader.readAsArrayBuffer(file);
 }
+
+function parseFile(file) { parseFiles([file]); }
 
 // ════════════════════════════════════════════════════════════════════════════
 // LEX PARSER  (from lex_payment_parser_v3.html — unchanged logic)
@@ -616,6 +641,10 @@ function parseLex(wb) {
       var descParts  = psSheets.length > 1 ? [cidStr, sheetName, company, title] : [cidStr, company, title];
       var description = descParts.filter(Boolean).join(' | ');
 
+      // vatOverride: VAT% = 20 but £0 VAT recorded — treat as Zero Rated (mirrors Meridian logic)
+      var vatOverride = (vatPct >= 0.15) && (Math.abs(effectiveVat) < 0.01);
+      if (vatOverride) { taxType = 'Zero Rated Income'; }
+
       var noVatPct = isNaN(vatPct) && taxType === '20% (VAT on Income)';
       if (noVatPct && Math.abs(effectiveVat) > 0) {
         var sign     = finalAmt < 0 ? -1 : 1;
@@ -633,7 +662,7 @@ function parseLex(wb) {
       } else {
         parsedRows.push({ date: fmtDate(row[receivedC]), amount: finalAmt, description: description,
           taxType: taxType, reference: isOut ? description : taxno,
-          isOut: isOut, noVatPct: false, taxClass: 'blue' });
+          isOut: isOut, noVatPct: false, vatOverride: vatOverride, taxClass: 'blue' });
       }
     }
   }
@@ -665,11 +694,20 @@ function parseLex(wb) {
     vatBadge.className = 'match-badge ' + (vm ? 'ok' : 'err');
   } else { vatBadge.textContent = 'LEX VAT not found'; vatBadge.className = 'match-badge err'; }
 
-  var noVatPctRows = parsedRows.filter(function(r){ return r.noVatPct; });
+  var noVatPctRows  = parsedRows.filter(function(r){ return r.noVatPct; });
+  var vatOverrideRows = parsedRows.filter(function(r){ return r.vatOverride; });
   var vatWarn = document.getElementById('vat-warning');
+  var warnParts = [];
+  if (vatOverrideRows.length > 0) {
+    warnParts.push('⚠ ' + vatOverrideRows.length + ' row' + (vatOverrideRows.length > 1 ? 's have' : ' has') +
+      ' VAT% = 20 but £0 VAT recorded — treated as Zero Rated Income. See rows highlighted in amber.');
+  }
   if (noVatPctRows.length > 0) {
-    vatWarn.textContent = '⚠ ' + noVatPctRows.length + ' row' + (noVatPctRows.length > 1 ? 's have' : ' has') +
-      ' an empty VAT% — VAT was calculated by LEX on a different base. See rows highlighted in the table.';
+    warnParts.push('⚠ ' + noVatPctRows.length + ' row' + (noVatPctRows.length > 1 ? 's have' : ' has') +
+      ' an empty VAT% — VAT was calculated by LEX on a different base. See rows highlighted in the table.');
+  }
+  if (warnParts.length > 0) {
+    vatWarn.innerHTML = warnParts.join('<br>');
     vatWarn.style.display = 'block';
   } else { vatWarn.style.display = 'none'; }
 
@@ -884,12 +922,12 @@ function renderResults(sourceTotal, sheetLabel, noteText) {
     if (r.rowClass) {
       tr.className = r.rowClass;
     } else {
-      tr.className = r.isAdj ? 'row-adj' : (r.noVatPct ? 'row-vatwarning' : (r.isOut ? 'row-out' : 'row-in'));
+      tr.className = r.isAdj ? 'row-adj' : (r.vatOverride ? 'row-vatwarning' : (r.noVatPct ? 'row-vatwarning' : (r.isOut ? 'row-out' : 'row-in')));
     }
     tr.innerHTML =
       '<td>' + r.date + '</td>' +
       '<td class="amt ' + (r.amount < 0 ? 'neg' : 'pos') + '">' + fmt(r.amount) + '</td>' +
-      '<td class="muted-txt payee-cell">' + selectedChambers + '</td>' +
+      '<td class="muted-txt payee-cell">' + (r.payeeOverride || selectedChambers) + '</td>' +
       '<td class="desc" title="' + r.description.replace(/"/g,'&quot;') + '">' + r.description + '</td>' +
       '<td class="' + (r.taxClass || 'slate') + '" style="white-space:nowrap">' + r.taxType + '</td>' +
       '<td class="slate desc" title="' + r.reference.replace(/"/g,'&quot;') + '">' + r.reference + '</td>' +
@@ -912,7 +950,7 @@ function buildCSV() {
   parsedRows.forEach(function(r) {
     lines.push([
       r.date, r.amount.toFixed(2),
-      '"' + selectedChambers.replace(/"/g,'""') + '"',
+      '"' + (r.payeeOverride || selectedChambers).replace(/"/g,'""') + '"',
       '"' + r.description.replace(/"/g,'""') + '"',
       r.taxType,
       '"' + r.reference.replace(/"/g,'""') + '"',
@@ -965,6 +1003,80 @@ function downloadCSV() {
   a.click(); URL.revokeObjectURL(a.href);
 }
 
+// ── Sales Xero CSV ─────────────────────────────────────────────────────────
+// Columns: *ContactName, EmailAddress, POAddressLine1–4, POCity, PORegion,
+//          POPostalCode, POCountry, *InvoiceNumber, Reference, *InvoiceDate,
+//          *DueDate, Total, InventoryItemCode, *Description, *Quantity,
+//          *UnitAmount, Discount, *AccountCode, *TaxType, TaxAmount,
+//          TrackingName1, TrackingOption1, TrackingName2, TrackingOption2,
+//          Currency, BrandingTheme
+var SALES_HEADER = '*ContactName,EmailAddress,POAddressLine1,POAddressLine2,POAddressLine3,POAddressLine4,POCity,PORegion,POPostalCode,POCountry,*InvoiceNumber,Reference,*InvoiceDate,*DueDate,Total,InventoryItemCode,*Description,*Quantity,*UnitAmount,Discount,*AccountCode,*TaxType,TaxAmount,TrackingName1,TrackingOption1,TrackingName2,TrackingOption2,Currency,BrandingTheme';
+
+function buildSalesCSVFromRows(rows) {
+  if (!rows.length) return null;
+  var lines = [SALES_HEADER];
+  rows.forEach(function(r) {
+    var contact     = '"' + (r.payeeOverride || selectedChambers).replace(/"/g,'""') + '"';
+    var invNumber   = '"' + r.reference.replace(/"/g,'""') + '"';
+    var invDate     = r.date;   // DD/MM/YYYY — Xero accepts this
+    var dueDate     = r.date;
+    var description = '"' + r.description.replace(/"/g,'""') + '"';
+    var qty         = '1';
+    var unitAmount  = r.amount.toFixed(2);
+    var acCode      = accountCode;
+    var taxType     = r.taxType;
+
+    // 29 columns total — blanks for everything not mapped
+    lines.push([
+      contact,   // *ContactName
+      '',        // EmailAddress
+      '', '', '', '',  // POAddressLine1-4
+      '', '', '', '',  // POCity, PORegion, POPostalCode, POCountry
+      invNumber, // *InvoiceNumber
+      '',        // Reference
+      invDate,   // *InvoiceDate
+      dueDate,   // *DueDate
+      '',        // Total (Xero calculates)
+      '',        // InventoryItemCode
+      description, // *Description
+      qty,       // *Quantity
+      unitAmount,// *UnitAmount
+      '',        // Discount
+      acCode,    // *AccountCode
+      taxType,   // *TaxType
+      '',        // TaxAmount
+      '', '', '', '',  // TrackingName1/Option1/Name2/Option2
+      '',        // Currency
+      ''         // BrandingTheme
+    ].join(','));
+  });
+  return lines.join('\n');
+}
+
+function downloadSalesCSV() {
+  if (!parsedRows.length) return;
+  var csv = buildSalesCSVFromRows(parsedRows);
+  if (!csv) return;
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = buildFilename().replace('_PS_', '_SI_');
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function downloadSalesMarchCSV() {
+  var rows = getMarchRows();
+  if (!rows.length) { alert('No rows found for March 2026 (01/03/2026 – 31/03/2026).'); return; }
+  var csv = buildSalesCSVFromRows(rows);
+  var baseName = buildFilename().replace(/_PS_.+$/, '');
+  var filename = baseName + '_SI_Mar2026.csv';
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
 // ── March 2026 filter ──────────────────────────────────────────────────────
 function isMarch2026(dateStr) {
   // Handles DD/MM/YYYY and DD/MM/YY formats
@@ -1014,12 +1126,131 @@ function downloadMarchCSV() {
 // Update March button state after results render
 function updateMarchBtn() {
   var btn = document.getElementById('march-btn');
+  var salesBtn = document.getElementById('sales-march-btn');
   if (!btn) return;
   var count = getMarchRows().length;
   btn.disabled = count === 0;
   btn.title = count > 0
     ? 'Download ' + count + ' row' + (count === 1 ? '' : 's') + ' dated 01/03/2026 – 31/03/2026'
     : 'No rows found for March 2026';
+  if (salesBtn) {
+    salesBtn.disabled = count === 0;
+    salesBtn.title = count > 0
+      ? 'Download Sales Invoice CSV for ' + count + ' row' + (count === 1 ? '' : 's') + ' dated 01/03/2026 – 31/03/2026'
+      : 'No rows found for March 2026';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MTD CB PARSER  — parses 1–3 CSV files, merges income rows, combined output
+// ════════════════════════════════════════════════════════════════════════════
+function parseMtdCsvFiles(files) {
+  var allRows = [], filesDone = 0, fileNames = [];
+  var sourceTotal = 0, sourceVat = 0;
+
+  Array.from(files).forEach(function(file) {
+    fileNames.push(file.name);
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var lines = e.target.result.split(/\r?\n/);
+        var headerIdx = -1, headers = [];
+        for (var i = 0; i < lines.length; i++) {
+          var cols = parseCsvLine(lines[i]);
+          var upper = cols.map(function(h){ return h.replace(/\*/g,'').trim().toUpperCase(); });
+          if (upper.indexOf('DATE') !== -1 && upper.indexOf('AMOUNT') !== -1) {
+            headerIdx = i; headers = upper; break;
+          }
+        }
+        if (headerIdx === -1) { showErr('Could not find header row in ' + file.name); return; }
+
+        var iDate  = headers.indexOf('DATE');
+        var iAmt   = headers.indexOf('AMOUNT');
+        var iPayee = headers.indexOf('PAYEE');
+        var iDesc  = headers.indexOf('DESCRIPTION');
+        var iRef   = headers.indexOf('REFERENCE');
+        var iTax   = headers.indexOf('TAXTYPE');
+
+        for (var i = headerIdx + 1; i < lines.length; i++) {
+          var cols = parseCsvLine(lines[i]);
+          if (cols.length < 3) continue;
+          var taxType = iTax !== -1 ? cols[iTax].trim() : '';
+          if (taxType.toUpperCase().indexOf('INCOME') === -1) continue;  // income rows only
+          var amt = parseFloat(cols[iAmt]) || 0;
+          var payee = iPayee !== -1 ? cols[iPayee].trim() : '';
+          allRows.push({
+            date:         iDate !== -1 ? cols[iDate].trim() : '',
+            amount:       amt,
+            description:  iDesc !== -1 ? cols[iDesc].trim() : '',
+            taxType:      taxType,
+            reference:    iRef  !== -1 ? cols[iRef].trim()  : '',
+            rowClass:     amt < 0 ? 'row-out' : 'row-in',
+            taxClass:     'teal',
+            payeeOverride: payee
+          });
+          sourceTotal += amt;
+          if (taxType.indexOf('20%') !== -1) sourceVat += amt / 6;
+        }
+      } catch(ex) { showErr(ex.message); }
+
+      filesDone++;
+      if (filesDone < files.length) return;  // wait for all files
+
+      if (allRows.length === 0) { showErr('No income rows found in the uploaded MTD CB file(s).'); return; }
+
+      // Sort by date ascending
+      allRows.sort(function(a, b){ return parseDMY(a.date) - parseDMY(b.date); });
+
+      parsedRows      = allRows;
+      reportBarrister = fileNames.join(', ');
+      reportPeriod    = '';
+      reportCode      = 'MTD';
+
+      applyTheme('mtd');
+      document.getElementById('info-barrister').textContent = fileNames.join(', ');
+      document.getElementById('info-period').textContent    = allRows[0].date + ' \u2013 ' + allRows[allRows.length - 1].date;
+      document.getElementById('info-records').textContent   = files.length + ' file' + (files.length > 1 ? 's' : '');
+
+      // VAT check
+      var ourVat = Math.round(parsedRows.reduce(function(s,r){
+        return r.taxType.indexOf('20%') !== -1 ? s + r.amount / 6 : s;
+      }, 0) * 100) / 100;
+      sourceVat = Math.round(sourceVat * 100) / 100;
+      document.getElementById('vat-ours').textContent = fmt(ourVat);
+      document.getElementById('vat-src').textContent  = fmt(sourceVat);
+      var vatBadge = document.getElementById('vat-badge');
+      var vm = Math.abs(ourVat - sourceVat) < 0.02;
+      vatBadge.textContent = vm ? '\u2713 VAT matches' : '\u2717 Difference: ' + fmt(ourVat - sourceVat);
+      vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
+      document.getElementById('vat-warning').style.display = 'none';
+
+      renderResults(Math.round(sourceTotal * 100) / 100, fileNames.join(', '), 'Income rows only (expense rows excluded)');
+    };
+    reader.readAsText(file);
+  });
+}
+
+// Simple RFC-4180 CSV line parser (handles quoted fields with embedded commas/newlines)
+function parseCsvLine(line) {
+  var result = [], cur = '', inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  result.push(cur);
+  return result;
+}
+
+// Parse DD/MM/YYYY (or DD/MM/YY) date string to timestamp for sorting
+function parseDMY(dateStr) {
+  var m = dateStr.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+  if (!m) return 0;
+  var y = parseInt(m[3]); if (y < 100) y += 2000;
+  return new Date(y, parseInt(m[2]) - 1, parseInt(m[1])).getTime();
 }
 
 // ── Drag & drop / file input ───────────────────────────────────────────────
@@ -1028,10 +1259,10 @@ dz.addEventListener('dragover',  function(e){ e.preventDefault(); dz.classList.a
 dz.addEventListener('dragleave', function(){ dz.classList.remove('dragging'); });
 dz.addEventListener('drop', function(e){
   e.preventDefault(); dz.classList.remove('dragging');
-  var f = e.dataTransfer.files[0]; if (f) parseFile(f);
+  if (e.dataTransfer.files.length) parseFiles(e.dataTransfer.files);
 });
 document.getElementById('file-input').addEventListener('change', function(e){
-  if (e.target.files[0]) parseFile(e.target.files[0]);
+  if (e.target.files.length) parseFiles(e.target.files);
 });
 </script>
 </body>
