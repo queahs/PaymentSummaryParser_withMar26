@@ -947,13 +947,28 @@ function renderResults(sourceTotal, sheetLabel, noteText) {
 // ── CSV export ─────────────────────────────────────────────────────────────
 function buildCSV() {
   var lines = ['*Date,*Amount,Payee,Description,*TaxType,Reference,*AccountCode'];
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var autoInvSuffix = 'INV';
+  var pm = reportPeriod.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/);
+  if (pm) {
+    var startMonth = parseInt(pm[2], 10), startYear = parseInt(pm[3], 10);
+    var endMonth   = parseInt(pm[5], 10), endYear   = parseInt(pm[6], 10);
+    autoInvSuffix  = (startMonth === endMonth && startYear === endYear)
+      ? MONTHS[endMonth - 1] + endYear
+      : 'QE' + MONTHS[endMonth - 1] + endYear;
+  }
+  var autoInvCode = reportCode || 'INV';
+  var autoInvCounter = 0;
+
   parsedRows.forEach(function(r) {
+    var ref = r.reference ? r.reference.trim() : '';
+    if (!ref) { autoInvCounter++; ref = autoInvCode + '-' + autoInvSuffix + '-' + autoInvCounter; }
     lines.push([
       r.date, r.amount.toFixed(2),
       '"' + (r.payeeOverride || selectedChambers).replace(/"/g,'""') + '"',
       '"' + r.description.replace(/"/g,'""') + '"',
       r.taxType,
-      '"' + r.reference.replace(/"/g,'""') + '"',
+      '"' + ref.replace(/"/g,'""') + '"',
       accountCode
     ].join(','));
   });
