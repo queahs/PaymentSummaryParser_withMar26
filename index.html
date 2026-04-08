@@ -1015,9 +1015,28 @@ var SALES_HEADER = '*ContactName,EmailAddress,POAddressLine1,POAddressLine2,POAd
 function buildSalesCSVFromRows(rows) {
   if (!rows.length) return null;
   var lines = [SALES_HEADER];
+
+  // Build the period suffix for auto-generated invoice numbers (e.g. "Mar2026" or "QEMar2026")
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var autoInvSuffix = 'INV';
+  var pm = reportPeriod.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/);
+  if (pm) {
+    var startMonth = parseInt(pm[2], 10), startYear = parseInt(pm[3], 10);
+    var endMonth   = parseInt(pm[5], 10), endYear   = parseInt(pm[6], 10);
+    autoInvSuffix  = (startMonth === endMonth && startYear === endYear)
+      ? MONTHS[endMonth - 1] + endYear
+      : 'QE' + MONTHS[endMonth - 1] + endYear;
+  }
+  // Barrister code prefix (e.g. "MA")
+  var autoInvCode = reportCode || 'INV';
+  var autoInvCounter = 0;
+
   rows.forEach(function(r) {
     var contact     = '"' + (r.payeeOverride || selectedChambers).replace(/"/g,'""') + '"';
-    var invNumber   = '"' + r.reference.replace(/"/g,'""') + '"';
+    // Auto-generate invoice number if reference is blank
+    var ref = r.reference ? r.reference.trim() : '';
+    if (!ref) { autoInvCounter++; ref = autoInvCode + '-' + autoInvSuffix + '-' + autoInvCounter; }
+    var invNumber   = '"' + ref.replace(/"/g,'""') + '"';
     var invDate     = r.date;   // DD/MM/YYYY — Xero accepts this
     var dueDate     = r.date;
     var description = '"' + r.description.replace(/"/g,'""') + '"';
