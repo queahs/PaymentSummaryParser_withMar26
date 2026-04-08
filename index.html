@@ -1177,7 +1177,6 @@ function parseMtdCsvFiles(files) {
           var taxType = iTax !== -1 ? cols[iTax].trim() : '';
           if (taxType.toUpperCase().indexOf('INCOME') === -1) continue;  // income rows only
           var amt = parseFloat(cols[iAmt]) || 0;
-          var payee = iPayee !== -1 ? cols[iPayee].trim() : '';
           allRows.push({
             date:         iDate !== -1 ? cols[iDate].trim() : '',
             amount:       amt,
@@ -1186,7 +1185,6 @@ function parseMtdCsvFiles(files) {
             reference:    iRef  !== -1 ? cols[iRef].trim()  : '',
             rowClass:     amt < 0 ? 'row-out' : 'row-in',
             taxClass:     'teal',
-            payeeOverride: payee
           });
           sourceTotal += amt;
           if (taxType.indexOf('20%') !== -1) sourceVat += amt / 6;
