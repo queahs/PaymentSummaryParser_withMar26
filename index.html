@@ -17,6 +17,7 @@
     --lex-accent: #4a9eff;
     --mer-accent: #a78bfa;
     --mtd-accent: #2dd4bf;
+    --bar-accent: #f97316;
     --slate: #94a3b8; --amber: #fbbf24;
   }
   body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono','Courier New',monospace; min-height: 100vh; padding: 2.5rem 2rem; }
@@ -45,6 +46,8 @@
   .format-badge.mer .dot { background: var(--mer-accent); }
   .format-badge.mtd { display: inline-flex; background: rgba(45,212,191,0.12); border: 1px solid rgba(45,212,191,0.4); color: var(--mtd-accent); }
   .format-badge.mtd .dot { background: var(--mtd-accent); }
+  .format-badge.bar { display: inline-flex; background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.4); color: var(--bar-accent); }
+  .format-badge.bar .dot { background: var(--bar-accent); }
 
   /* ── Controls ── */
   .control-row {
@@ -182,7 +185,7 @@
   <header>
     <div class="tag" id="hdr-tag">LEX &amp; Meridian</div>
     <h1>Payment Summary Parser</h1>
-    <p class="subtitle" id="hdr-sub">Supports LEX (.xlsx), Meridian (.xls / .xlsx) and MTD CB (.csv, up to 3 files) — format detected automatically</p>
+    <p class="subtitle" id="hdr-sub">Supports LEX, BarBooks, Meridian (.xlsx/.xls) and MTD CB (.csv, up to 3 files) — format detected automatically</p>
   </header>
 
   <!-- Format detection badge -->
@@ -271,7 +274,7 @@
   <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple style="display:none">
   <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
     <div class="drop-icon">📂</div>
-    <div class="drop-label" id="drop-label">Drop LEX, Meridian or MTD CB files here, or click to browse</div>
+    <div class="drop-label" id="drop-label">Drop LEX, BarBooks, Meridian or MTD CB files here, or click to browse</div>
     <div class="drop-hint">.xlsx / .xls for LEX &amp; Meridian &middot; .csv for MTD CB (up to 3 files)</div>
   </div>
 
@@ -436,8 +439,9 @@ function applyTheme(format) {
   detectedFormat = format;
   var isLex = format === 'lex';
   var isMtd = format === 'mtd';
-  var accentHex  = isLex ? '#4a9eff' : (isMtd ? '#2dd4bf' : '#a78bfa');
-  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : (isMtd ? 'rgba(45,212,191,0.05)' : 'rgba(167,139,250,0.05)');
+  var isBar = format === 'bar';
+  var accentHex  = isLex ? '#4a9eff' : (isMtd ? '#2dd4bf' : (isBar ? '#f97316' : '#a78bfa'));
+  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : (isMtd ? 'rgba(45,212,191,0.05)' : (isBar ? 'rgba(249,115,22,0.05)' : 'rgba(167,139,250,0.05)'));
 
   document.documentElement.style.setProperty('--accent', accentHex);
 
@@ -447,9 +451,9 @@ function applyTheme(format) {
 
   var badge = document.getElementById('format-badge');
   badge.className = 'format-badge ' + format;
-  document.getElementById('format-badge-text').textContent = isLex ? 'LEX detected' : (isMtd ? 'MTD CB detected' : 'Meridian detected');
+  document.getElementById('format-badge-text').textContent = isLex ? 'LEX detected' : (isMtd ? 'MTD CB detected' : (isBar ? 'BarBooks detected' : 'Meridian detected'));
 
-  document.getElementById('hdr-tag').textContent = isLex ? 'LEX' : (isMtd ? 'MTD CB' : 'Meridian');
+  document.getElementById('hdr-tag').textContent = isLex ? 'LEX' : (isMtd ? 'MTD CB' : (isBar ? 'BarBooks' : 'Meridian'));
 
   var copyBtn = document.getElementById('copy-btn');
   if (isLex) {
@@ -460,6 +464,10 @@ function applyTheme(format) {
     copyBtn.style.background  = '#0f2e2e';
     copyBtn.style.borderColor = '#1a6e6e';
     copyBtn.style.color       = '#5eead4';
+  } else if (isBar) {
+    copyBtn.style.background  = '#2e1a0a';
+    copyBtn.style.borderColor = '#7a3a10';
+    copyBtn.style.color       = '#fdba74';
   } else {
     copyBtn.style.background  = '#2a1a6e';
     copyBtn.style.borderColor = '#4a2aae';
@@ -472,8 +480,8 @@ function applyTheme(format) {
   document.getElementById('info-barrister-label').textContent = isLex ? 'Barrister(s)' : (isMtd ? 'Files' : 'Barrister');
   document.getElementById('info-period-label').textContent    = 'Period';
 
-  document.getElementById('vat-src-label').textContent   = isLex ? 'LEX VAT (from report totals)' : (isMtd ? 'MTD CB VAT (sum from source)' : 'Meridian VAT (from Barrister Total row)');
-  document.getElementById('src-total-label').textContent = isLex ? 'LEX total' : (isMtd ? 'MTD CB total' : 'Meridian total');
+  document.getElementById('vat-src-label').textContent   = isLex ? 'LEX VAT (from report totals)' : (isMtd ? 'MTD CB VAT (sum from source)' : (isBar ? 'BarBooks VAT (from Totals sheet)' : 'Meridian VAT (from Barrister Total row)'));
+  document.getElementById('src-total-label').textContent = isLex ? 'LEX total' : (isMtd ? 'MTD CB total' : (isBar ? 'BarBooks total' : 'Meridian total'));
 }
 
 // ── Format detection ───────────────────────────────────────────────────────
@@ -490,6 +498,19 @@ function detectFormat(wb) {
     });
   });
   if (hasLex) return 'lex';
+
+  // BarBooks: barrister sheet has 'Matter ID' header; skip summary sheets
+  var barSkip = ['Totals', 'All barristers'];
+  var hasBar = wb.SheetNames.some(function(n) {
+    if (barSkip.indexOf(n) !== -1) return false;
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
+    return rows.some(function(r) {
+      return r && r.some(function(c) {
+        return typeof c === 'string' && c.toUpperCase().indexOf('MATTER ID') !== -1;
+      });
+    });
+  });
+  if (hasBar) return 'bar';
 
   var hasMeridian = wb.SheetNames.some(function(n) {
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null, raw: true });
@@ -538,7 +559,7 @@ function parseFiles(files) {
         return;
       }
       applyTheme(format);
-      if (format === 'lex') { parseLex(wb); } else { parseMeridian(wb); }
+      if (format === 'lex') { parseLex(wb); } else if (format === 'bar') { parseBarBooks(wb); } else { parseMeridian(wb); }
     } catch(ex) { showErr(ex.message + (ex.stack ? ' — ' + ex.stack.split('\n')[1] : '')); }
   };
   reader.readAsArrayBuffer(file);
@@ -1188,6 +1209,183 @@ function updateMarchBtn() {
       ? 'Download Sales Invoice CSV for ' + count + ' row' + (count === 1 ? '' : 's') + ' dated 01/03/2026 – 31/03/2026'
       : 'No rows found for March 2026';
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BARBOOKS PARSER
+// Columns: Matter ID, Matter title, Barrister, Initials, Firm, Solicitor,
+//          Receipt number, Tax Invoice number, Receipt date, Receipt Type,
+//          VAT %, Total (Excl. VAT), VAT, Total (Incl. VAT), Tasks (Incl. VAT), Expenses (Incl. VAT)
+// VAT %: 2 = 20%, 0 = 0%  |  Totals in 'Totals' sheet TOTALS row
+// ════════════════════════════════════════════════════════════════════════════
+function parseBarBooks(wb) {
+  var barSkip = ['Totals', 'All barristers'];
+
+  // Find barrister sheet(s) — any sheet not in barSkip that has Matter ID header
+  var bbSheets = wb.SheetNames.filter(function(n) {
+    if (barSkip.indexOf(n) !== -1) return false;
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
+    return rows.some(function(r) {
+      return r && r.some(function(c) {
+        return typeof c === 'string' && c.toUpperCase().indexOf('MATTER ID') !== -1;
+      });
+    });
+  });
+  if (!bbSheets.length) { showErr('Could not find a BarBooks sheet (no Matter ID column).'); return; }
+
+  parsedRows = [];
+  var bbTotalInc = null, bbVat = null;
+
+  // ── Pull totals from Totals sheet ─────────────────────────────────────────
+  if (wb.Sheets['Totals']) {
+    var totRaw = XLSX.utils.sheet_to_json(wb.Sheets['Totals'], { header: 1, defval: null });
+    for (var ti = 0; ti < totRaw.length; ti++) {
+      var tr = totRaw[ti];
+      if (!tr) continue;
+      var first = tr[0];
+      if (typeof first === 'string' && first.toUpperCase().trim() === 'TOTALS') {
+        // Row: TOTALS, '', Total(ExclVAT), VAT, Total(InclVAT), Tasks(InclVAT), TasksVAT, ...
+        if (typeof tr[4] === 'number') bbTotalInc = tr[4];
+        if (typeof tr[2] === 'number' && typeof tr[3] === 'number') bbVat = tr[3];
+        break;
+      }
+    }
+  }
+
+  // ── Parse each barrister sheet ────────────────────────────────────────────
+  var bbBarrister = '', bbInitials = '', bbPeriod = '';
+
+  for (var si = 0; si < bbSheets.length; si++) {
+    var sn  = bbSheets[si];
+    var ws  = wb.Sheets[sn];
+    var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+
+    // Extract barrister name + period from header rows (rows 0–4)
+    for (var hi = 0; hi < Math.min(5, raw.length); hi++) {
+      var hr = raw[hi]; if (!hr) continue;
+      var cell = hr[0];
+      if (typeof cell !== 'string') continue;
+      var cell = cell.trim();
+      // "Barrister: William O'Hara (WFO)"
+      var bm = cell.match(/^Barrister:\s*(.+?)\s*\(([^)]+)\)\s*$/i);
+      if (bm) { bbBarrister = bm[1].trim(); bbInitials = bm[2].trim(); }
+      // "From DD/MM/YYYY to DD/MM/YYYY"
+      var pm = cell.match(/From\s+(\d{2}\/\d{2}\/\d{4})\s+to\s+(\d{2}\/\d{2}\/\d{4})/i);
+      if (pm) bbPeriod = pm[1] + ' to ' + pm[2];
+    }
+
+    // Find header row (contains 'Matter ID')
+    var headerIdx = -1;
+    for (var i = 0; i < raw.length; i++) {
+      if (raw[i] && raw[i].some(function(c) {
+        return typeof c === 'string' && c.toUpperCase().indexOf('MATTER ID') !== -1;
+      })) { headerIdx = i; break; }
+    }
+    if (headerIdx === -1) continue;
+
+    var headers = raw[headerIdx].map(function(h){ return h ? String(h).toUpperCase().trim() : ''; });
+    function col(name) {
+      var e = headers.findIndex(function(h){ return h === name; });
+      return e !== -1 ? e : headers.findIndex(function(h){ return h.indexOf(name) !== -1; });
+    }
+
+    var COL_MATTER  = col('MATTER ID');
+    var COL_TITLE   = col('MATTER TITLE');
+    var COL_FIRM    = col('FIRM');
+    var COL_SOLR    = col('SOLICITOR');
+    var COL_RCPTNO  = col('RECEIPT NUMBER');
+    var COL_INVNO   = col('TAX INVOICE NUMBER');
+    var COL_DATE    = col('RECEIPT DATE');
+    var COL_VATPCT  = col('VAT %');
+    var COL_EXCL    = col('TOTAL (EXCL. VAT)');
+    var COL_VAT     = col('VAT');
+    var COL_INCL    = col('TOTAL (INCL. VAT)');
+
+    for (var i = headerIdx + 1; i < raw.length; i++) {
+      var row = raw[i]; if (!row) continue;
+      var matterId = row[COL_MATTER];
+      if (!matterId) continue;
+      var matterStr = String(matterId).trim();
+      if (!matterStr || matterStr.toUpperCase() === 'MATTER ID') continue;
+
+      var dateVal = COL_DATE !== -1 ? row[COL_DATE] : null;
+      var dateStr = '';
+      if (typeof dateVal === 'number') {
+        var pd = XLSX.SSF.parse_date_code(dateVal);
+        dateStr = String(pd.d).padStart(2,'0') + '/' + String(pd.m).padStart(2,'0') + '/' + pd.y;
+      } else if (typeof dateVal === 'string') {
+        dateStr = dateVal.trim();
+      }
+
+      var vatPctRaw = COL_VATPCT !== -1 && typeof row[COL_VATPCT] === 'number' ? row[COL_VATPCT] : 0;
+      // BarBooks VAT%: 2 = 20%, 0 = 0% (scale is percentage not decimal)
+      var is20pct  = vatPctRaw >= 1;
+      var taxType  = is20pct ? '20% (VAT on Income)' : 'Zero Rated Income';
+
+      var totalIncl = COL_INCL !== -1 && typeof row[COL_INCL] === 'number' ? row[COL_INCL] : 0;
+      if (totalIncl === 0) continue;
+
+      var vatAmt   = COL_VAT  !== -1 && typeof row[COL_VAT]  === 'number' ? row[COL_VAT]  : 0;
+      var invNo    = COL_INVNO !== -1 && row[COL_INVNO] ? String(row[COL_INVNO]).trim() : '';
+      var firm     = COL_FIRM  !== -1 && row[COL_FIRM]  ? String(row[COL_FIRM]).trim()  : '';
+      var solr     = COL_SOLR  !== -1 && row[COL_SOLR]  ? String(row[COL_SOLR]).trim()  : '';
+      var title    = COL_TITLE !== -1 && row[COL_TITLE] ? String(row[COL_TITLE]).trim()  : '';
+
+      var descParts = [matterStr, invNo ? 'Inv ' + invNo : '', firm, solr, title].filter(Boolean);
+      var description = descParts.join(' | ');
+
+      // vatOverride: VAT% flagged as 20 but £0 VAT recorded
+      var vatOverride = is20pct && Math.abs(vatAmt) < 0.01;
+      if (vatOverride) taxType = 'Zero Rated Income';
+
+      parsedRows.push({
+        date:        dateStr,
+        amount:      round2(totalIncl),
+        description: description,
+        taxType:     taxType,
+        reference:   invNo,
+        rowClass:    vatOverride ? 'row-vatwarning' : (totalIncl < 0 ? 'row-out' : 'row-in'),
+        vatOverride: vatOverride,
+        taxClass:    'amber'
+      });
+    }
+  }
+
+  if (!parsedRows.length) { showErr('No payment rows found. Check this is a BarBooks Payment Summary.'); return; }
+
+  // Metadata
+  reportBarrister = bbBarrister || bbSheets.join(', ');
+  reportPeriod    = bbPeriod;
+  reportCode      = bbInitials || bbSheets.join('_');
+
+  document.getElementById('info-barrister').textContent = bbBarrister || bbSheets.join(', ');
+  document.getElementById('info-period').textContent    = bbPeriod || '—';
+  document.getElementById('info-records').textContent   = bbSheets.join(', ');
+  document.getElementById('info-grid').style.display    = 'grid';
+
+  // VAT override warning
+  var overrideRows = parsedRows.filter(function(r){ return r.vatOverride; });
+  var vatWarn = document.getElementById('vat-warning');
+  if (overrideRows.length > 0) {
+    vatWarn.textContent = '\u26a0 ' + overrideRows.length + ' row' + (overrideRows.length > 1 ? 's have' : ' has') +
+      ' VAT% = 20 but \u00a30 VAT recorded \u2014 treated as Zero Rated Income. See rows highlighted in amber.';
+    vatWarn.style.display = 'block';
+  } else { vatWarn.style.display = 'none'; }
+
+  // VAT check
+  var ourVat = round2(parsedRows.reduce(function(s,r){
+    return r.taxType === '20% (VAT on Income)' ? s + round2(r.amount / 6) : s;
+  }, 0));
+  document.getElementById('vat-ours').textContent = fmt(ourVat);
+  document.getElementById('vat-src').textContent  = bbVat !== null ? fmt(bbVat) : 'n/a';
+  var vatBadge = document.getElementById('vat-badge');
+  if (bbVat !== null) {
+    var vm = Math.abs(ourVat - bbVat) < 0.02;
+    vatBadge.textContent = vm ? '\u2713 VAT matches' : '\u2717 Difference: ' + fmt(ourVat - bbVat);
+    vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
+  } else { vatBadge.textContent = 'BarBooks VAT not found'; vatBadge.className = 'match-badge err'; }
+
+  renderResults(bbTotalInc, bbSheets.join(', '), 'All amounts are payments in (positive)');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
