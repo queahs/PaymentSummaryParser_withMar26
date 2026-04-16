@@ -18,6 +18,7 @@
     --mer-accent: #a78bfa;
     --mtd-accent: #2dd4bf;
     --bar-accent: #f97316;
+    --inv-accent: #e879f9;
     --slate: #94a3b8; --amber: #fbbf24;
   }
   body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono','Courier New',monospace; min-height: 100vh; padding: 2.5rem 2rem; }
@@ -48,6 +49,8 @@
   .format-badge.mtd .dot { background: var(--mtd-accent); }
   .format-badge.bar { display: inline-flex; background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.4); color: var(--bar-accent); }
   .format-badge.bar .dot { background: var(--bar-accent); }
+  .format-badge.inv { display: inline-flex; background: rgba(232,121,249,0.12); border: 1px solid rgba(232,121,249,0.4); color: var(--inv-accent); }
+  .format-badge.inv .dot { background: var(--inv-accent); }
 
   /* ── Controls ── */
   .control-row {
@@ -164,6 +167,7 @@
   .neg  { color: var(--red); }
   .muted-txt { color: #888; }
   .slate  { color: var(--slate); }
+  .pink   { color: var(--inv-accent); }
   .purple { color: var(--mer-accent); }
   .blue   { color: var(--lex-accent); }
   .amber  { color: var(--amber); }
@@ -185,7 +189,7 @@
   <header>
     <div class="tag" id="hdr-tag">LEX &amp; Meridian</div>
     <h1>Payment Summary Parser</h1>
-    <p class="subtitle" id="hdr-sub">Supports LEX, BarBooks, Meridian (.xlsx/.xls) and MTD CB (.csv, up to 3 files) — format detected automatically</p>
+    <p class="subtitle" id="hdr-sub">Supports LEX, BarBooks, Meridian, InvoicesPaid (.xlsx/.xls) and MTD CB (.csv, up to 3 files) — format detected automatically</p>
   </header>
 
   <!-- Format detection badge -->
@@ -274,7 +278,7 @@
   <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple style="display:none">
   <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
     <div class="drop-icon">📂</div>
-    <div class="drop-label" id="drop-label">Drop LEX, BarBooks, Meridian or MTD CB files here, or click to browse</div>
+    <div class="drop-label" id="drop-label">Drop LEX, BarBooks, Meridian, InvoicesPaid or MTD CB files here, or click to browse</div>
     <div class="drop-hint">.xlsx / .xls for LEX &amp; Meridian &middot; .csv for MTD CB (up to 3 files)</div>
   </div>
 
@@ -440,8 +444,9 @@ function applyTheme(format) {
   var isLex = format === 'lex';
   var isMtd = format === 'mtd';
   var isBar = format === 'bar';
-  var accentHex  = isLex ? '#4a9eff' : (isMtd ? '#2dd4bf' : (isBar ? '#f97316' : '#a78bfa'));
-  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : (isMtd ? 'rgba(45,212,191,0.05)' : (isBar ? 'rgba(249,115,22,0.05)' : 'rgba(167,139,250,0.05)'));
+  var isInv = format === 'inv';
+  var accentHex  = isLex ? '#4a9eff' : (isMtd ? '#2dd4bf' : (isBar ? '#f97316' : (isInv ? '#e879f9' : '#a78bfa')));
+  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : (isMtd ? 'rgba(45,212,191,0.05)' : (isBar ? 'rgba(249,115,22,0.05)' : (isInv ? 'rgba(232,121,249,0.05)' : 'rgba(167,139,250,0.05)')));
 
   document.documentElement.style.setProperty('--accent', accentHex);
 
@@ -451,9 +456,9 @@ function applyTheme(format) {
 
   var badge = document.getElementById('format-badge');
   badge.className = 'format-badge ' + format;
-  document.getElementById('format-badge-text').textContent = isLex ? 'LEX detected' : (isMtd ? 'MTD CB detected' : (isBar ? 'BarBooks detected' : 'Meridian detected'));
+  document.getElementById('format-badge-text').textContent = isLex ? 'LEX detected' : (isMtd ? 'MTD CB detected' : (isBar ? 'BarBooks detected' : (isInv ? 'InvoicesPaid detected' : 'Meridian detected')));
 
-  document.getElementById('hdr-tag').textContent = isLex ? 'LEX' : (isMtd ? 'MTD CB' : (isBar ? 'BarBooks' : 'Meridian'));
+  document.getElementById('hdr-tag').textContent = isLex ? 'LEX' : (isMtd ? 'MTD CB' : (isBar ? 'BarBooks' : (isInv ? 'InvoicesPaid' : 'Meridian')));
 
   var copyBtn = document.getElementById('copy-btn');
   if (isLex) {
@@ -468,6 +473,10 @@ function applyTheme(format) {
     copyBtn.style.background  = '#2e1a0a';
     copyBtn.style.borderColor = '#7a3a10';
     copyBtn.style.color       = '#fdba74';
+  } else if (isInv) {
+    copyBtn.style.background  = '#2e0a2e';
+    copyBtn.style.borderColor = '#7a1a7a';
+    copyBtn.style.color       = '#f0abfc';
   } else {
     copyBtn.style.background  = '#2a1a6e';
     copyBtn.style.borderColor = '#4a2aae';
@@ -477,11 +486,11 @@ function applyTheme(format) {
   document.getElementById('info-grid').style.display  = 'grid';
   document.getElementById('legend').style.display     = (format === 'meridian') ? 'flex' : 'none';
 
-  document.getElementById('info-barrister-label').textContent = isLex ? 'Barrister(s)' : (isMtd ? 'Files' : 'Barrister');
+  document.getElementById('info-barrister-label').textContent = isLex ? 'Barrister(s)' : (isMtd ? 'Files' : (isInv ? 'Barrister' : 'Barrister'));
   document.getElementById('info-period-label').textContent    = 'Period';
 
-  document.getElementById('vat-src-label').textContent   = isLex ? 'LEX VAT (from report totals)' : (isMtd ? 'MTD CB VAT (sum from source)' : (isBar ? 'BarBooks VAT (from Totals sheet)' : 'Meridian VAT (from Barrister Total row)'));
-  document.getElementById('src-total-label').textContent = isLex ? 'LEX total' : (isMtd ? 'MTD CB total' : (isBar ? 'BarBooks total' : 'Meridian total'));
+  document.getElementById('vat-src-label').textContent   = isLex ? 'LEX VAT (from report totals)' : (isMtd ? 'MTD CB VAT (sum from source)' : (isBar ? 'BarBooks VAT (from Totals sheet)' : (isInv ? 'InvoicesPaid VAT (sum from rows)' : 'Meridian VAT (from Barrister Total row)')));
+  document.getElementById('src-total-label').textContent = isLex ? 'LEX total' : (isMtd ? 'MTD CB total' : (isBar ? 'BarBooks total' : (isInv ? 'InvoicesPaid total' : 'Meridian total')));
 }
 
 // ── Format detection ───────────────────────────────────────────────────────
@@ -511,6 +520,17 @@ function detectFormat(wb) {
     });
   });
   if (hasBar) return 'bar';
+
+  // InvoicesPaid: single sheet with 'Invoice Reference' and 'Receipt VAT number' header cols
+  var hasInv = wb.SheetNames.some(function(n) {
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
+    return rows.some(function(r) {
+      return r && r.some(function(c) {
+        return typeof c === 'string' && c.trim() === 'Invoice Reference';
+      });
+    });
+  });
+  if (hasInv) return 'inv';
 
   var hasMeridian = wb.SheetNames.some(function(n) {
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null, raw: true });
@@ -559,7 +579,7 @@ function parseFiles(files) {
         return;
       }
       applyTheme(format);
-      if (format === 'lex') { parseLex(wb); } else if (format === 'bar') { parseBarBooks(wb); } else { parseMeridian(wb); }
+      if (format === 'lex') { parseLex(wb); } else if (format === 'bar') { parseBarBooks(wb); } else if (format === 'inv') { parseInvoicesPaid(wb); } else { parseMeridian(wb); }
     } catch(ex) { showErr(ex.message + (ex.stack ? ' — ' + ex.stack.split('\n')[1] : '')); }
   };
   reader.readAsArrayBuffer(file);
@@ -1209,6 +1229,185 @@ function updateMarchBtn() {
       ? 'Download Sales Invoice CSV for ' + count + ' row' + (count === 1 ? '' : 's') + ' dated 01/03/2026 – 31/03/2026'
       : 'No rows found for March 2026';
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// INVOICES PAID PARSER
+// Two-row header (rows 2+3). Key columns:
+//   Col 0:  Paid (date)          Col 1:  Case ref
+//   Col 3:  Barrister Code       Col 4:  Barrister Name
+//   Col 8:  Invoice Reference    Col 22: Total Net
+//   Col 23: Total Tax (VAT)      Col 24: Total Gross (incl. VAT)
+//   Col 26: Solicitor Name       Col 31: Sol ref
+//   Col 32: Case name            Col 36: Receipt VAT number
+// VAT: Tax > 0 → '20% (VAT on Income)', Tax = 0 → 'Zero Rated Income'
+// Totals row: col 12 = 'Totals' (strings, not numbers) — compute from rows
+// ════════════════════════════════════════════════════════════════════════════
+function parseInvoicesPaid(wb) {
+  // Find the worksheet — typically called 'Worksheet'
+  var targetSheet = null;
+  for (var si = 0; si < wb.SheetNames.length; si++) {
+    var sn  = wb.SheetNames[si];
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: null });
+    var hasInvRef = rows.some(function(r) {
+      return r && r.some(function(c) { return typeof c === 'string' && c.trim() === 'Invoice Reference'; });
+    });
+    if (hasInvRef) { targetSheet = sn; break; }
+  }
+  if (!targetSheet) { showErr('Could not find InvoicesPaid sheet (no Invoice Reference column).'); return; }
+
+  var ws  = wb.Sheets[targetSheet];
+  var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+
+  // ── Find header rows (two-row header: row with 'Invoice Reference') ────────
+  var headerIdx = -1;
+  for (var i = 0; i < raw.length; i++) {
+    if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.trim() === 'Invoice Reference'; })) {
+      headerIdx = i; break;
+    }
+  }
+  if (headerIdx === -1) { showErr('Could not find header row in InvoicesPaid file.'); return; }
+
+  // Merge two header rows to resolve sub-headers (e.g. Payment/Net, Payment/Tax etc.)
+  var h1 = raw[headerIdx]     || [];
+  var h2 = raw[headerIdx + 1] || [];
+
+  // Build column index by scanning both header rows for known field names
+  function findCol(name) {
+    var nu = name.toUpperCase();
+    for (var i = 0; i < h1.length; i++) {
+      if (typeof h1[i] === 'string' && h1[i].toUpperCase().trim() === nu) return i;
+    }
+    for (var i = 0; i < h2.length; i++) {
+      if (typeof h2[i] === 'string' && h2[i].toUpperCase().trim() === nu) return i;
+    }
+    return -1;
+  }
+
+  // Fixed column positions confirmed from file inspection
+  var COL_DATE    = 0;   // Paid
+  var COL_CASEREF = 1;   // Case ref
+  var COL_BARCODE = 3;   // Barrister Code
+  var COL_BARNAME = 4;   // Barrister Name
+  var COL_INVREF  = 8;   // Invoice Reference
+  var COL_TOT_NET = 22;  // Total Net
+  var COL_TOT_TAX = 23;  // Total Tax
+  var COL_TOT_GRS = 24;  // Total Gross (incl. VAT)
+  var COL_SOLNAME = 26;  // Solicitor Name
+  var COL_SOLREF  = 31;  // Sol ref
+  var COL_CASENAME= 32;  // Case name
+  var COL_VATNO   = 36;  // Receipt VAT number
+
+  parsedRows = [];
+  var invBarrister = '', invCode = '', invPeriod = '';
+  var sourceTotal = 0, sourceVat = 0;
+  var dataStart = headerIdx + 2; // skip both header rows
+
+  // ── Extract barrister + period from row 0 and row 1 ──────────────────────
+  for (var i = 0; i < Math.min(headerIdx, raw.length); i++) {
+    var r = raw[i]; if (!r) continue;
+    var cell = r[0];
+    if (typeof cell !== 'string') continue;
+    cell = cell.trim();
+    // "Invoices paid export: Created DD/MM/YYYY - DD/MM/YYYY"
+    var perM = cell.match(/Created\s+(\d{2}\/\d{2}\/\d{4})\s*[-\u2013]\s*(\d{2}\/\d{2}\/\d{4})/i);
+    if (perM) invPeriod = perM[1] + ' to ' + perM[2];
+    // "Barrister: Full Name (CODE)"
+    var barM = cell.match(/^Barrister:\s*(.+?)\s*\(([^)]+)\)\s*(?:Ltd\s*)?$/i);
+    if (!barM) barM = cell.match(/^Barrister:\s*(.+?)\s+\(([A-Z]{2,5})\)/i);
+    if (barM) { invBarrister = barM[1].trim(); invCode = barM[2].trim(); }
+  }
+
+  // ── Parse data rows ────────────────────────────────────────────────────────
+  for (var i = dataStart; i < raw.length; i++) {
+    var row = raw[i]; if (!row) continue;
+
+    // Stop at Totals row (col 12 = 'Totals' string)
+    if (typeof row[12] === 'string' && row[12].trim().toLowerCase() === 'totals') break;
+
+    var grossVal = typeof row[COL_TOT_GRS] === 'number' ? row[COL_TOT_GRS] : null;
+    if (grossVal === null || grossVal === 0) continue;
+
+    // Date: stored as JS Date object by xlsx library
+    var dateStr = '';
+    var dateVal = row[COL_DATE];
+    if (dateVal) {
+      if (typeof dateVal === 'number') {
+        var pd = XLSX.SSF.parse_date_code(dateVal);
+        dateStr = String(pd.d).padStart(2,'0') + '/' + String(pd.m).padStart(2,'0') + '/' + pd.y;
+      } else if (typeof dateVal === 'string') {
+        dateStr = dateVal.trim();
+      } else {
+        // xlsx may parse dates as objects with {y,m,d} when raw:true
+        try {
+          var ds = XLSX.SSF.parse_date_code(dateVal);
+          dateStr = String(ds.d).padStart(2,'0') + '/' + String(ds.m).padStart(2,'0') + '/' + ds.y;
+        } catch(e) { dateStr = ''; }
+      }
+    }
+
+    var taxVal   = typeof row[COL_TOT_TAX] === 'number' ? row[COL_TOT_TAX] : 0;
+    var is20pct  = Math.abs(taxVal) > 0.001;
+    var taxType  = is20pct ? '20% (VAT on Income)' : 'Zero Rated Income';
+
+    var vatOverride = false; // InvoicesPaid explicitly records 0 tax for zero-rated rows — no override needed
+
+    var invRef   = COL_INVREF  !== -1 && row[COL_INVREF]   ? String(row[COL_INVREF]).trim()   : '';
+    var caseRef  = COL_CASEREF !== -1 && row[COL_CASEREF]  ? String(row[COL_CASEREF]).trim()  : '';
+    var solName  = COL_SOLNAME !== -1 && row[COL_SOLNAME]  ? String(row[COL_SOLNAME]).trim()  : '';
+    var caseName = COL_CASENAME!== -1 && row[COL_CASENAME] ? String(row[COL_CASENAME]).trim() : '';
+    var solRef   = COL_SOLREF  !== -1 && row[COL_SOLREF]   ? String(row[COL_SOLREF]).trim()   : '';
+
+    var descParts = [caseRef ? 'Case ' + caseRef : '', invRef ? 'Inv ' + invRef : '', solName, caseName].filter(Boolean);
+    var description = descParts.join(' | ');
+
+    sourceTotal += grossVal;
+    sourceVat   += taxVal;
+
+    parsedRows.push({
+      date:        dateStr,
+      amount:      round2(grossVal),
+      description: description,
+      taxType:     taxType,
+      reference:   invRef,
+      rowClass:    grossVal < 0 ? 'row-out' : 'row-in',
+      vatOverride: false,
+      taxClass:    'pink'
+    });
+  }
+
+  if (!parsedRows.length) { showErr('No payment rows found. Check this is an InvoicesPaid export.'); return; }
+
+  // Metadata
+  // Try to extract initials from barrister name if not found in header
+  if (!invCode) {
+    var codeMatch = invBarrister.match(/\(([A-Z]{2,5})\)\s*$/);
+    invCode = codeMatch ? codeMatch[1] : parsedRows[0] && raw[dataStart] ? (raw[dataStart][COL_BARCODE] || 'INV') : 'INV';
+  }
+  reportBarrister = invBarrister || '—';
+  reportPeriod    = invPeriod    || '';
+  reportCode      = invCode      || 'INV';
+
+  document.getElementById('info-barrister').textContent = invBarrister || '—';
+  document.getElementById('info-period').textContent    = invPeriod    || '—';
+  document.getElementById('info-records').textContent   = targetSheet;
+  document.getElementById('info-grid').style.display    = 'grid';
+
+  // VAT check — no source total row (Totals row has strings), so use our computed sum
+  sourceTotal = round2(sourceTotal);
+  sourceVat   = round2(sourceVat);
+  var ourVat  = round2(parsedRows.reduce(function(s,r){
+    return r.taxType === '20% (VAT on Income)' ? s + round2(r.amount / 6) : s;
+  }, 0));
+  document.getElementById('vat-ours').textContent = fmt(ourVat);
+  document.getElementById('vat-src').textContent  = fmt(sourceVat);
+  var vatBadge = document.getElementById('vat-badge');
+  var vm = Math.abs(ourVat - sourceVat) < 0.02;
+  vatBadge.textContent = vm ? '\u2713 VAT matches' : '\u2717 Difference: ' + fmt(ourVat - sourceVat);
+  vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
+  document.getElementById('vat-warning').style.display = 'none';
+
+  renderResults(sourceTotal, targetSheet, 'All amounts are Total Gross (incl. VAT)');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
