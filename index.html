@@ -666,6 +666,7 @@ function parseLex(wb) {
 
   parsedRows = [];
   var totalPyt = null, lexVat = null, sheetTotals = [];
+  var lexVatColSum = 0;  // sum of LEX's own per-row VAT column, used for the VAT check display
 
   for (var si = 0; si < psSheets.length; si++) {
     var sheetName = psSheets[si];
@@ -687,6 +688,9 @@ function parseLex(wb) {
     var caseIdC  = col('CASE ID'),  companyC = col('COMPANY'), titleC = col('CASE TITLE');
     var receivedC= col('RECEIVED'), vatPctC  = col('VAT%'),    amountC = col('TOTAL');
     var taxnoC   = col('TAXNO'),    vatAmtC  = colExact('VAT');
+    // netAmtC = the AMOUNT column (net excl. VAT) — distinct from amountC which is TOTAL (gross)
+    // Used only for detecting split net/VAT pairs; output amounts always use amountC (TOTAL).
+    var netAmtC  = col('AMOUNT');
 
     var outStart = -1;
     for (var i = headerIdx; i < raw.length; i++) {
@@ -698,26 +702,89 @@ function parseLex(wb) {
     var st = extractTotalsFromRows(raw, amountC !== -1 ? amountC : -1, vatAmtC !== -1 ? vatAmtC : -1);
     if (st) sheetTotals.push(st);
 
+    // ── First pass: collect raw data rows for this sheet so we can detect split pairs ──
+    // A "split pair" is two rows with the same TAXNO where one has net>0/vat=0 (vatOverride)
+    // and the other has net=0/vat>0 (vatOnly). LEX occasionally splits one payment across
+    // two rows like this. We merge them into a single 20% row (net+vat = gross).
+    var sheetDataRows = [];
     for (var i = headerIdx + 1; i < raw.length; i++) {
       var row = raw[i]; if (!row) continue;
       var cid = row[caseIdC]; if (!cid) continue;
       var cidStr = String(cid).trim();
       if (!cidStr || !/^\d/.test(cidStr)) continue;
+      var netAmt  = netAmtC !== -1 ? (typeof row[netAmtC] === 'number' ? row[netAmtC] : parseFloat(row[netAmtC]) || 0) : 0;
+      var vatAmt  = typeof row[vatAmtC] === 'number' ? row[vatAmtC] : parseFloat(row[vatAmtC]) || 0;
+      var vatPct  = typeof row[vatPctC] === 'number' ? row[vatPctC] : parseFloat(row[vatPctC]);
+      var taxno   = row[taxnoC] ? String(row[taxnoC]).trim() : '';
+      sheetDataRows.push({ rawIdx: i, row: row, cidStr: cidStr, netAmt: netAmt, vatAmt: vatAmt, vatPct: vatPct, taxno: taxno });
+    }
 
-      var isOut      = outStart !== -1 && i > outStart;
-      var amount     = typeof row[amountC] === 'number' ? row[amountC] : parseFloat(row[amountC]) || 0;
-      var finalAmt   = isOut ? -amount : amount;
-      var vatPct     = typeof row[vatPctC] === 'number' ? row[vatPctC] : parseFloat(row[vatPctC]);
-      var effectiveVat = typeof row[vatAmtC] === 'number' ? row[vatAmtC] : parseFloat(row[vatAmtC]) || 0;
-      var taxType    = (vatPct >= 0.15) || (isNaN(vatPct) && Math.abs(effectiveVat) > 0)
-        ? '20% (VAT on Income)' : 'Zero Rated Income';
-      var company    = row[companyC] ? String(row[companyC]).trim() : '';
-      var title      = (titleC !== -1 && row[titleC] && String(row[titleC]).trim()) ? String(row[titleC]).trim() : 'Anonymised';
-      var taxno      = row[taxnoC] ? String(row[taxnoC]).trim() : '';
-      var descParts  = psSheets.length > 1 ? [cidStr, sheetName, company, title] : [cidStr, company, title];
-      var description = descParts.filter(Boolean).join(' | ');
+    // Build a set of indices that are the net-only partner of a vat-only row
+    var mergedAsPartner = {};  // rawIdx -> true
+    var vatOnlyPairs    = {};  // rawIdx of vatOnly row -> rawIdx of its net-only partner
+    for (var di = 0; di < sheetDataRows.length; di++) {
+      var dr = sheetDataRows[di];
+      var isVatOnly = (dr.vatPct >= 0.15) && (Math.abs(dr.netAmt) < 0.01) && (Math.abs(dr.vatAmt) > 0.01);
+      if (!isVatOnly) continue;
+      // Find a matching net-only row: same taxno, vat%=20, net>0, vat=0
+      for (var dj = 0; dj < sheetDataRows.length; dj++) {
+        if (dj === di) continue;
+        var dr2 = sheetDataRows[dj];
+        if (dr2.taxno === dr.taxno && dr2.vatPct >= 0.15 && Math.abs(dr2.vatAmt) < 0.01 && Math.abs(dr2.netAmt) > 0.01 && !mergedAsPartner[dr2.rawIdx]) {
+          vatOnlyPairs[dr.rawIdx]     = dr2.rawIdx;
+          mergedAsPartner[dr2.rawIdx] = true;
+          break;
+        }
+      }
+    }
 
-      // vatOverride: VAT% = 20 but £0 VAT recorded — treat as Zero Rated (mirrors Meridian logic)
+    // ── Second pass: emit output rows ──────────────────────────────────────────
+    for (var di = 0; di < sheetDataRows.length; di++) {
+      var dr     = sheetDataRows[di];
+      var row    = dr.row;
+      var cidStr = dr.cidStr;
+      var taxno  = dr.taxno;
+      var vatPct = dr.vatPct;
+      var i      = dr.rawIdx;
+
+      // Skip net-only rows that have been claimed as a merge partner
+      if (mergedAsPartner[i]) continue;
+
+      var isOut        = outStart !== -1 && i > outStart;
+      var effectiveVat = dr.vatAmt;
+      var amount       = dr.netAmt;    // the AMOUNT (net) column
+      var totalAmt     = typeof row[amountC] === 'number' ? row[amountC] : parseFloat(row[amountC]) || 0;  // TOTAL col
+      var finalAmt     = isOut ? -totalAmt : totalAmt;
+      var company      = row[companyC] ? String(row[companyC]).trim() : '';
+      var title        = (titleC !== -1 && row[titleC] && String(row[titleC]).trim()) ? String(row[titleC]).trim() : 'Anonymised';
+      var descParts    = psSheets.length > 1 ? [cidStr, sheetName, company, title] : [cidStr, company, title];
+      var description  = descParts.filter(Boolean).join(' | ');
+      var taxType      = (vatPct >= 0.15) || (isNaN(vatPct) && Math.abs(effectiveVat) > 0)
+                         ? '20% (VAT on Income)' : 'Zero Rated Income';
+
+      // Accumulate LEX's own VAT column for the display check
+      if (vatPct >= 0.15 && Math.abs(effectiveVat) > 0) { lexVatColSum += isOut ? -effectiveVat : effectiveVat; }
+
+      // ── Merge: vatOnly row + its net-only partner → one combined 20% row ──
+      if (vatOnlyPairs[i] !== undefined) {
+        // Find the partner's total (net-only row: total = net, no vat)
+        var partnerRawIdx = vatOnlyPairs[i];
+        var partnerDr = null;
+        for (var pk = 0; pk < sheetDataRows.length; pk++) {
+          if (sheetDataRows[pk].rawIdx === partnerRawIdx) { partnerDr = sheetDataRows[pk]; break; }
+        }
+        var partnerTotal = partnerDr ? (typeof partnerDr.row[amountC] === 'number' ? partnerDr.row[amountC] : parseFloat(partnerDr.row[amountC]) || 0) : 0;
+        var sign         = isOut ? -1 : 1;
+        var combinedAmt  = Math.round((partnerTotal + totalAmt) * 100) / 100;
+        parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * combinedAmt, description: description,
+          taxType: '20% (VAT on Income)', reference: isOut ? description : taxno,
+          isOut: isOut, isMerged: true, taxClass: 'blue' });
+        // Also credit the partner's VAT col to lexVatColSum if not already done
+        if (partnerDr && partnerDr.vatPct >= 0.15) { /* partner vat=0, nothing to add */ }
+        continue;
+      }
+
+      // vatOverride: VAT% = 20 but £0 VAT recorded — treat as Zero Rated
       var vatOverride = (vatPct >= 0.15) && (Math.abs(effectiveVat) < 0.01);
       if (vatOverride) { taxType = 'Zero Rated Income'; }
 
@@ -758,8 +825,9 @@ function parseLex(wb) {
     }
   }
 
-  // VAT check
-  var ourVat = parsedRows.reduce(function(s,r){ return r.taxType === '20% (VAT on Income)' ? s + (r.amount / 6) : s; }, 0);
+  // VAT check — use the sum of LEX's own per-row VAT column (lexVatColSum) as "Our VAT"
+  // rather than recomputing amount/6, which avoids accumulated rounding drift.
+  var ourVat = round2(lexVatColSum);
   document.getElementById('vat-ours').textContent = fmt(ourVat);
   document.getElementById('vat-ours').className   = 'vat-cell-value ' + (ourVat >= 0 ? 'pos' : 'neg');
   document.getElementById('vat-src').textContent  = lexVat !== null ? fmt(lexVat) : 'n/a';
@@ -770,10 +838,15 @@ function parseLex(wb) {
     vatBadge.className = 'match-badge ' + (vm ? 'ok' : 'err');
   } else { vatBadge.textContent = 'LEX VAT not found'; vatBadge.className = 'match-badge err'; }
 
-  var noVatPctRows  = parsedRows.filter(function(r){ return r.noVatPct; });
+  var noVatPctRows    = parsedRows.filter(function(r){ return r.noVatPct; });
   var vatOverrideRows = parsedRows.filter(function(r){ return r.vatOverride; });
+  var mergedRows      = parsedRows.filter(function(r){ return r.isMerged; });
   var vatWarn = document.getElementById('vat-warning');
   var warnParts = [];
+  if (mergedRows.length > 0) {
+    warnParts.push('\u2139 ' + mergedRows.length + ' row' + (mergedRows.length > 1 ? 's have' : ' has') +
+      ' been merged from split net/VAT pairs (LEX recorded net and VAT on separate lines for the same TAXNO). See rows highlighted in amber.');
+  }
   if (vatOverrideRows.length > 0) {
     warnParts.push('⚠ ' + vatOverrideRows.length + ' row' + (vatOverrideRows.length > 1 ? 's have' : ' has') +
       ' VAT% = 20 but £0 VAT recorded — treated as Zero Rated Income. See rows highlighted in amber.');
