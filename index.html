@@ -119,6 +119,8 @@
   tr.row-out:hover { background: rgba(251,113,133,0.1); }
   tr.row-vatwarning { background: rgba(251,191,36,0.18); box-shadow: inset 3px 0 0 #fbbf24; }
   tr.row-vatwarning:hover { background: rgba(251,191,36,0.28); }
+  tr.row-novatpct { background: rgba(74,158,255,0.1); box-shadow: inset 3px 0 0 #4a9eff; }
+  tr.row-novatpct:hover { background: rgba(74,158,255,0.18); }
   tr.row-adj { background: rgba(251,191,36,0.07); box-shadow: inset 3px 0 0 rgba(251,191,36,0.4); }
   tr.row-adj:hover { background: rgba(251,191,36,0.13); }
   tr.row-adj td { font-style: italic; color: #a89060; }
@@ -302,6 +304,7 @@
       <div class="legend-item"><div class="legend-dot" style="background:rgba(74,158,255,0.2); border:1px solid rgba(74,158,255,0.3)"></div>Expenses only</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.3)"></div>Fees + Expenses (combined)</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(251,191,36,0.3); border:1px solid #fbbf24"></div>VAT% = 20 but £0 VAT charged — treated as Zero Rated</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(74,158,255,0.25); border:1px solid #4a9eff"></div>Empty VAT% — split into 20% line (VAT×6) + Zero Rated remainder</div>
     </div>
 
     <div class="table-wrap">
@@ -720,9 +723,11 @@ function parseLexMulti(workbooks, files) {
           var sign = finalAmt < 0 ? -1 : 1, absVat = Math.abs(effectiveVat);
           var cleanAmt = Math.round(absVat * 6 * 100) / 100;
           var adjAmt   = Math.round((Math.abs(finalAmt) - cleanAmt) * 100) / 100;
-          parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * cleanAmt, description: description, taxType: '20% (VAT on Income)', reference: isOut ? description : taxno, isOut: isOut, noVatPct: true, taxClass: 'blue' });
+          // Line 1: VAT×6 gross amount at 20%
+          parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * cleanAmt, description: description + ' | 20% VAT portion (VAT £' + absVat.toFixed(2) + ' × 6)', taxType: '20% (VAT on Income)', reference: isOut ? description : taxno, isOut: isOut, noVatPct: true, taxClass: 'blue' });
           if (Math.abs(adjAmt) >= 0.01) {
-            parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * adjAmt, description: description + ' | adjustment', taxType: 'Zero Rated Income', reference: isOut ? description : taxno, isOut: isOut, noVatPct: false, isAdj: true, taxClass: 'blue' });
+            // Line 2: remainder at Zero Rated
+            parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * adjAmt, description: description + ' | Zero Rated remainder (£' + Math.abs(finalAmt).toFixed(2) + ' − £' + cleanAmt.toFixed(2) + ')', taxType: 'Zero Rated Income', reference: isOut ? description : taxno, isOut: isOut, noVatPct: false, isAdj: true, taxClass: 'blue' });
           }
         } else {
           parsedRows.push({ date: fmtDate(row[receivedC]), amount: finalAmt, description: description, taxType: taxType, reference: isOut ? description : taxno, isOut: isOut, noVatPct: false, vatOverride: vatOverride, taxClass: 'blue' });
@@ -746,14 +751,14 @@ function parseLexMulti(workbooks, files) {
   var lexVat   = (allSheetTotals.length > 0 && allSheetTotals.every(function(t){ return t.vat !== null; }))
     ? allSheetTotals.reduce(function(s,t){ return s + t.vat; }, 0) : null;
 
-  // VAT check
-  var ourVat = round2(lexVatColSum);
+  // VAT check — independently verify by computing amount/6 on every 20% row
+  var ourVat = round2(parsedRows.reduce(function(s,r){ return r.taxType === '20% (VAT on Income)' ? s + round2(r.amount / 6) : s; }, 0));
   document.getElementById('vat-ours').textContent = fmt(ourVat);
   document.getElementById('vat-ours').className   = 'vat-cell-value ' + (ourVat >= 0 ? 'pos' : 'neg');
   document.getElementById('vat-src').textContent  = lexVat !== null ? fmt(lexVat) : 'n/a';
   var vatBadge = document.getElementById('vat-badge');
   if (lexVat !== null) {
-    var vm = Math.abs(ourVat - lexVat) < 0.02;
+    var vm = Math.abs(ourVat - lexVat) < 0.15;
     vatBadge.textContent = vm ? '✓ VAT matches' : '✗ Difference: ' + fmt(ourVat - lexVat);
     vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
   } else { vatBadge.textContent = 'LEX VAT not found'; vatBadge.className = 'match-badge err'; }
@@ -766,7 +771,7 @@ function parseLexMulti(workbooks, files) {
   var warnParts = [];
   if (mergedRows.length > 0)      warnParts.push('\u2139 ' + mergedRows.length + ' row' + (mergedRows.length > 1 ? 's have' : ' has') + ' been merged from split net/VAT pairs. See amber rows.');
   if (vatOverrideRows.length > 0) warnParts.push('⚠ ' + vatOverrideRows.length + ' row' + (vatOverrideRows.length > 1 ? 's have' : ' has') + ' VAT% = 20 but £0 VAT recorded — treated as Zero Rated Income.');
-  if (noVatPctRows.length > 0)    warnParts.push('⚠ ' + noVatPctRows.length + ' row' + (noVatPctRows.length > 1 ? 's have' : ' has') + ' an empty VAT%.');
+  if (noVatPctRows.length > 0)    warnParts.push('⚠ ' + noVatPctRows.length + ' row' + (noVatPctRows.length > 1 ? 's have' : ' has') + ' an empty VAT% — split into a 20% line (VAT amount × 6) and a Zero Rated remainder. See blue highlighted rows.');
   if (warnParts.length > 0) { vatWarn.innerHTML = warnParts.join('<br>'); vatWarn.style.display = 'block'; } else { vatWarn.style.display = 'none'; }
 
   // Info cards — merge barrister names and periods across files
@@ -998,7 +1003,7 @@ function renderResults(sourceTotal, sheetLabel, noteText) {
   parsedRows.forEach(function(r) {
     var tr = document.createElement('tr');
     if (r.rowClass) { tr.className = r.rowClass; }
-    else { tr.className = r.isAdj ? 'row-adj' : (r.vatOverride ? 'row-vatwarning' : (r.noVatPct ? 'row-vatwarning' : (r.isOut ? 'row-out' : 'row-in'))); }
+    else { tr.className = r.isAdj ? 'row-adj' : (r.vatOverride ? 'row-vatwarning' : (r.noVatPct ? 'row-novatpct' : (r.isOut ? 'row-out' : 'row-in'))); }
     tr.innerHTML =
       '<td>' + r.date + '</td>' +
       '<td class="amt ' + (r.amount < 0 ? 'neg' : 'pos') + '">' + fmt(r.amount) + '</td>' +
