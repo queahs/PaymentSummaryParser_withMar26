@@ -898,7 +898,25 @@ function parseMeridianMulti(workbooks, files) {
       var vatOverride = (vatPct >= 15 && actualVat === 0);
       if (vatOverride) overrideCount++;
       var rowClass = vatOverride ? 'row-vatoverride' : (fees > 0 && exps > 0) ? 'row-mixed' : (exps > 0 ? 'row-expenses' : 'row-in');
-      parsedRows.push({ date: dateStr, amount: round2(totalPaid), description: description, taxType: taxType, reference: invNo, rowClass: rowClass, vatOverride: vatOverride, taxClass: 'purple' });
+
+      // ── Meridian split logic: VAT% = 0 but actual VAT recorded ─────────────
+      // e.g. Inv 103 line 2: fees £4,911.35 + VAT £20.89 = £4,932.24 total
+      // VAT was charged on only part of the amount. Split into:
+      //   Line 1: vatAmt × 6 = £125.34  @ 20% (VAT on Income)  → amount/6 = £20.89 ✓
+      //   Line 2: remainder  = £4,806.90 @ Zero Rated Income
+      // This keeps the amount/6 VAT check in sync with Meridian's reported VAT total.
+      var isMixedVat = (vatPct < 15) && (actualVat > 0);
+      if (isMixedVat) {
+        var sign     = totalPaid < 0 ? -1 : 1;
+        var cleanAmt = round2(actualVat * 6);
+        var adjAmt   = round2(Math.abs(totalPaid) - cleanAmt);
+        parsedRows.push({ date: dateStr, amount: sign * cleanAmt, description: description, taxType: '20% (VAT on Income)', reference: invNo, rowClass: rowClass, vatOverride: false, taxClass: 'purple' });
+        if (Math.abs(adjAmt) >= 0.01) {
+          parsedRows.push({ date: dateStr, amount: sign * adjAmt, description: description + ' | adjustment', taxType: 'Zero Rated Income', reference: invNo, rowClass: 'row-vatoverride', vatOverride: false, isAdj: true, taxClass: 'purple' });
+        }
+      } else {
+        parsedRows.push({ date: dateStr, amount: round2(totalPaid), description: description, taxType: taxType, reference: invNo, rowClass: rowClass, vatOverride: vatOverride, taxClass: 'purple' });
+      }
     }
 
     if (wbMeridianTotal !== null) { allMeridianTotals += wbMeridianTotal; hasAnyTotal = true; }
