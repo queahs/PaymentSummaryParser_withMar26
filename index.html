@@ -12,7 +12,7 @@
     --bg: #0f1117; --bg2: #13161e; --bg3: #1a1d24;
     --border: #1e2230; --border2: #2a2f3e;
     --text: #e8e6e0; --muted: #666; --muted2: #444;
-    --accent: #94a3b8; /* neutral until a file is loaded */
+    --accent: #94a3b8;
     --green: #34d399; --red: #fb7185;
     --lex-accent: #4a9eff;
     --mer-accent: #a78bfa;
@@ -20,6 +20,7 @@
     --bar-accent: #f97316;
     --inv-accent: #e879f9;
     --bst-accent: #34d399;
+    --mtdsl-accent: #f59e0b;
     --slate: #94a3b8; --amber: #fbbf24;
   }
   body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono','Courier New',monospace; min-height: 100vh; padding: 2.5rem 2rem; }
@@ -28,19 +29,13 @@
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
   .container { max-width: 1280px; margin: 0 auto; }
 
-  /* ── Header ── */
   header { margin-bottom: 2rem; }
   .tag { font-size: 0.65rem; color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.3rem; transition: color 0.3s; }
   h1 { font-family: 'IBM Plex Sans',sans-serif; font-size: 1.6rem; font-weight: 600; color: #fff; margin-bottom: 0.3rem; }
   .subtitle { font-size: 0.75rem; color: var(--muted); }
 
-  /* ── Format detection badge ── */
   .format-badge-wrap { margin-bottom: 1.25rem; min-height: 2rem; display: flex; align-items: center; }
-  .format-badge {
-    display: none; align-items: center; gap: 8px;
-    padding: 6px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
-    letter-spacing: 0.06em; text-transform: uppercase;
-  }
+  .format-badge { display: none; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
   .format-badge.lex  { display: inline-flex; background: rgba(74,158,255,0.12); border: 1px solid rgba(74,158,255,0.4); color: var(--lex-accent); }
   .format-badge.mer  { display: inline-flex; background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.4); color: var(--mer-accent); }
   .format-badge .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
@@ -54,62 +49,37 @@
   .format-badge.inv .dot { background: var(--inv-accent); }
   .format-badge.bst { display: inline-flex; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: var(--bst-accent); }
   .format-badge.bst .dot { background: var(--bst-accent); }
+  .format-badge.mtdsl { display: inline-flex; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.4); color: var(--mtdsl-accent); }
+  .format-badge.mtdsl .dot { background: var(--mtdsl-accent); }
 
-  /* ── Controls ── */
-  .control-row {
-    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 0.85rem 1.25rem; margin-bottom: 1.25rem;
-  }
+  .control-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; }
   .ctrl-label { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
   .toggle-pills { display: flex; background: var(--bg3); border-radius: 6px; padding: 3px; gap: 3px; }
-  .toggle-pill {
-    padding: 5px 18px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;
-    cursor: pointer; border: none; background: transparent;
-    color: var(--muted); font-family: 'IBM Plex Mono',monospace;
-    transition: background 0.15s, color 0.15s;
-  }
+  .toggle-pill { padding: 5px 18px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'IBM Plex Mono',monospace; transition: background 0.15s, color 0.15s; }
   .toggle-pill.active { background: var(--accent); color: #fff; }
   .toggle-pill:not(.active):hover { color: var(--text); }
   .ctrl-hint { font-size: 0.68rem; color: var(--muted2); }
-  .chambers-select {
-    background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
-    color: var(--text); font-family: 'IBM Plex Mono',monospace; font-size: 0.8rem;
-    padding: 5px 10px; cursor: pointer; outline: none; transition: border-color 0.15s;
-  }
+  .chambers-select { background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: 'IBM Plex Mono',monospace; font-size: 0.8rem; padding: 5px 10px; cursor: pointer; outline: none; transition: border-color 0.15s; }
   .chambers-select:focus, .chambers-select:hover { border-color: var(--accent); }
-  .chambers-custom {
-    display: none; background: var(--bg3); border: 1px solid var(--accent);
-    border-radius: 6px; color: var(--text); font-family: 'IBM Plex Mono',monospace;
-    font-size: 0.8rem; padding: 5px 10px; outline: none; min-width: 220px;
-  }
+  .chambers-custom { display: none; background: var(--bg3); border: 1px solid var(--accent); border-radius: 6px; color: var(--text); font-family: 'IBM Plex Mono',monospace; font-size: 0.8rem; padding: 5px 10px; outline: none; min-width: 220px; }
 
-  /* ── Drop zone ── */
-  .drop-zone {
-    border: 1.5px dashed var(--border2); border-radius: 10px; padding: 2.5rem 2rem;
-    text-align: center; cursor: pointer; background: var(--bg2);
-    transition: border-color 0.2s, background 0.2s; margin-bottom: 1.25rem; user-select: none;
-  }
+  .drop-zone { border: 1.5px dashed var(--border2); border-radius: 10px; padding: 2.5rem 2rem; text-align: center; cursor: pointer; background: var(--bg2); transition: border-color 0.2s, background 0.2s; margin-bottom: 1.25rem; user-select: none; }
   .drop-zone:hover, .drop-zone.dragging { border-color: var(--accent); background: rgba(148,163,184,0.05); }
   .drop-icon { font-size: 2rem; margin-bottom: 0.6rem; line-height: 1; }
   .drop-label { font-size: 0.9rem; color: #aaa; font-family: 'IBM Plex Sans',sans-serif; }
   .drop-label.active { color: var(--accent); }
   .drop-hint { font-size: 0.7rem; color: var(--muted2); margin-top: 0.4rem; }
 
-  /* ── Error ── */
   .error { display: none; background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.3); border-radius: 8px; padding: 0.8rem 1rem; color: var(--red); font-size: 0.8rem; margin-bottom: 1.25rem; }
 
-  /* ── Results ── */
   #results { display: none; }
 
-  /* ── Meridian info cards ── */
   .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
   .info-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; }
   .info-card-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
   .info-card-value { font-size: 0.9rem; font-weight: 500; color: var(--text); }
   .info-card-value.accent { color: var(--accent); }
 
-  /* ── VAT check ── */
   .vat-check { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
   .vat-check-title { font-size: 0.65rem; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; margin-bottom: 0.75rem; }
   .vat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
@@ -117,7 +87,6 @@
   .vat-cell-label { font-size: 0.65rem; color: var(--muted); }
   .vat-cell-value { font-size: 0.9rem; font-weight: 500; font-variant-numeric: tabular-nums; }
 
-  /* ── Summary bar ── */
   .summary-bar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-bottom: 1rem; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; font-size: 0.72rem; }
   .chip-label { color: var(--muted); }
@@ -125,7 +94,6 @@
   .match-badge.ok  { background: rgba(52,211,153,0.1);  border: 1px solid rgba(52,211,153,0.3);  color: var(--green); }
   .match-badge.err { background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.3); color: var(--red); }
   .copy-btn { padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 0.72rem; font-family: 'IBM Plex Mono',monospace; letter-spacing: 0.05em; transition: background 0.15s; border: 1px solid; }
-  /* copy btn colours set dynamically via JS when format is known */
   .copy-btn.dl { background: #1a3a1a; border-color: #2a6a2a; color: #86efac; }
   .copy-btn.dl:hover { background: #2a5a2a; }
   .copy-btn.bank-btn { background: #1e2a3a; border-color: #3a5a7a; color: #93c5fd; }
@@ -138,16 +106,13 @@
   .copy-btn.sales-march-btn { background: #1a2e3a; border-color: #2a6a8a; color: #7dd3fc; }
   .copy-btn.sales-march-btn:hover { background: #1e3a4a; }
   .copy-btn.sales-march-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-group-label { font-size: 0.62rem; color: var(--muted2); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; align-self: center; padding: 0 4px; }
   .btn-separator { width: 1px; height: 22px; background: var(--border2); align-self: center; margin: 0 2px; }
 
-  /* ── Table ── */
   .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
   table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
   thead tr { background: var(--bg2); border-bottom: 1px solid var(--border); }
   th { padding: 8px 10px; text-align: left; color: var(--accent); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; position: sticky; top: 0; background: var(--bg2); z-index: 2; }
   td { padding: 6px 10px; border-bottom: 1px solid #181b24; }
-  /* LEX row types */
   tr.row-in  { background: rgba(52,211,153,0.03); }
   tr.row-in:hover  { background: rgba(52,211,153,0.08); }
   tr.row-out { background: rgba(251,113,133,0.05); }
@@ -157,14 +122,12 @@
   tr.row-adj { background: rgba(251,191,36,0.07); box-shadow: inset 3px 0 0 rgba(251,191,36,0.4); }
   tr.row-adj:hover { background: rgba(251,191,36,0.13); }
   tr.row-adj td { font-style: italic; color: #a89060; }
-  /* Meridian row types */
   tr.row-expenses { background: rgba(74,158,255,0.04); }
   tr.row-expenses:hover { background: rgba(74,158,255,0.09); }
   tr.row-mixed { background: rgba(167,139,250,0.05); }
   tr.row-mixed:hover { background: rgba(167,139,250,0.1); }
   tr.row-vatoverride { background: rgba(251,191,36,0.12); box-shadow: inset 3px 0 0 #fbbf24; }
   tr.row-vatoverride:hover { background: rgba(251,191,36,0.22); }
-  /* Shared */
   .amt  { text-align: right; font-variant-numeric: tabular-nums; }
   .pos  { color: var(--green); }
   .neg  { color: var(--red); }
@@ -174,6 +137,7 @@
   .purple { color: var(--mer-accent); }
   .blue   { color: var(--lex-accent); }
   .green  { color: var(--bst-accent); }
+  .gold   { color: var(--mtdsl-accent); }
   .amber  { color: var(--amber); }
   .desc { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   tfoot tr { background: var(--bg2); border-top: 2px solid var(--border2); }
@@ -182,7 +146,6 @@
   .sheet-note { margin-top: 0.6rem; font-size: 0.65rem; color: var(--muted2); }
   .sheet-note span { color: var(--accent); }
 
-  /* ── Legend ── */
   .legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; color: var(--muted); }
   .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
@@ -193,10 +156,9 @@
   <header>
     <div class="tag" id="hdr-tag">LEX &amp; Meridian</div>
     <h1>Payment Summary Parser</h1>
-    <p class="subtitle" id="hdr-sub">Supports LEX, BarBooks, Meridian, InvoicesPaid (.xlsx/.xls), MTD CB (.csv, up to 3 files) and BarStat (.csv) — format detected automatically</p>
+    <p class="subtitle" id="hdr-sub">Supports LEX &amp; Meridian (up to 3 .xlsx files each), BarBooks, InvoicesPaid (.xlsx/.xls), MTD CB, MTD SL (.csv, up to 3 files) and BarStat (.csv) — format detected automatically</p>
   </header>
 
-  <!-- Format detection badge -->
   <div class="format-badge-wrap">
     <div class="format-badge" id="format-badge">
       <div class="dot"></div>
@@ -204,7 +166,6 @@
     </div>
   </div>
 
-  <!-- Account code toggle -->
   <div class="control-row">
     <span class="ctrl-label">*AccountCode</span>
     <div class="toggle-pills">
@@ -214,7 +175,6 @@
     <span class="ctrl-hint">Account code applied to all entries</span>
   </div>
 
-  <!-- Payee / Chambers -->
   <div class="control-row">
     <span class="ctrl-label">Payee</span>
     <select class="chambers-select" id="chambers-select" onchange="setChambers(this.value)">
@@ -278,19 +238,17 @@
     <span class="ctrl-hint" id="chambers-hint">Select the chambers to apply to all entries</span>
   </div>
 
-  <!-- File input -->
+  <!-- multiple attribute allows selecting several xlsx files at once -->
   <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple style="display:none">
   <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
     <div class="drop-icon">📂</div>
-    <div class="drop-label" id="drop-label">Drop LEX, BarBooks, Meridian, InvoicesPaid, MTD CB or BarStat files here, or click to browse</div>
-    <div class="drop-hint">.xlsx / .xls for LEX &amp; Meridian &middot; .csv for MTD CB (up to 3 files) or BarStat (single file)</div>
+    <div class="drop-label" id="drop-label">Drop LEX, BarBooks, Meridian, InvoicesPaid, MTD CB, MTD SL or BarStat files here, or click to browse</div>
+    <div class="drop-hint">.xlsx / .xls — LEX &amp; Meridian accept up to 3 files each &middot; .csv — MTD CB / MTD SL up to 3 files, BarStat single file</div>
   </div>
 
   <div class="error" id="err"></div>
 
   <div id="results">
-
-    <!-- Meridian-only info cards (hidden for LEX) -->
     <div class="info-grid" id="info-grid" style="display:none">
       <div class="info-card">
         <div class="info-card-label" id="info-barrister-label">Barrister</div>
@@ -306,7 +264,6 @@
       </div>
     </div>
 
-    <!-- VAT check -->
     <div class="vat-check">
       <div class="vat-check-title">VAT Check</div>
       <div class="vat-grid">
@@ -326,7 +283,6 @@
       <div id="vat-warning" style="display:none; margin-top:0.75rem; padding:0.5rem 0.75rem; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.3); border-radius:6px; font-size:0.72rem; color:#fbbf24;"></div>
     </div>
 
-    <!-- Summary bar -->
     <div class="summary-bar">
       <div class="chip"><span class="chip-label">Entries</span><strong id="c-entries">0</strong></div>
       <div class="chip"><span class="chip-label">Our total</span><strong id="c-total">—</strong></div>
@@ -341,57 +297,37 @@
       <button class="copy-btn sales-march-btn" id="sales-march-btn" onclick="downloadSalesMarchCSV()" title="Download Sales Invoice rows dated 01/03/2026 – 31/03/2026 only">&#8659; Sales Xero Mar 2026</button>
     </div>
 
-    <!-- Meridian-only legend -->
     <div class="legend" id="legend" style="display:none">
-      <div class="legend-item">
-        <div class="legend-dot" style="background:rgba(52,211,153,0.25); border:1px solid rgba(52,211,153,0.4)"></div>
-        Fees only
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:rgba(74,158,255,0.2); border:1px solid rgba(74,158,255,0.3)"></div>
-        Expenses only
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.3)"></div>
-        Fees + Expenses (combined)
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:rgba(251,191,36,0.3); border:1px solid #fbbf24"></div>
-        VAT% = 20 but £0 VAT charged — treated as Zero Rated
-      </div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(52,211,153,0.25); border:1px solid rgba(52,211,153,0.4)"></div>Fees only</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(74,158,255,0.2); border:1px solid rgba(74,158,255,0.3)"></div>Expenses only</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.3)"></div>Fees + Expenses (combined)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(251,191,36,0.3); border:1px solid #fbbf24"></div>VAT% = 20 but £0 VAT charged — treated as Zero Rated</div>
     </div>
 
     <div class="table-wrap">
       <table>
         <thead>
-          <tr>
-            <th>*Date</th><th>*Amount</th><th>Payee</th><th>Description</th><th>*TaxType</th><th>Reference</th><th>*AccountCode</th>
-          </tr>
+          <tr><th>*Date</th><th>*Amount</th><th>Payee</th><th>Description</th><th>*TaxType</th><th>Reference</th><th>*AccountCode</th></tr>
         </thead>
         <tbody id="tbl-body"></tbody>
         <tfoot>
-          <tr>
-            <td class="foot-label">Total</td>
-            <td class="amt" id="foot-total"></td>
-            <td colspan="5"></td>
-          </tr>
+          <tr><td class="foot-label">Total</td><td class="amt" id="foot-total"></td><td colspan="5"></td></tr>
         </tfoot>
       </table>
     </div>
     <p class="sheet-note" id="sheet-note"></p>
-
-  </div><!-- #results -->
-</div><!-- .container -->
+  </div>
+</div>
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
-var parsedRows    = [];
-var accountCode   = '100';
+var parsedRows       = [];
+var accountCode      = '100';
 var selectedChambers = 'Chambers';
-var detectedFormat   = null;  // 'lex' | 'meridian' | 'bar' | 'inv' | 'mtd' | 'bst'
-var reportBarrister  = '';    // full name for CSV filename
-var reportPeriod     = '';    // period string for CSV filename
-var reportCode       = '';    // barrister code/initials for CSV filename (CPX, CI, etc.)
+var detectedFormat   = null;
+var reportBarrister  = '';
+var reportPeriod     = '';
+var reportCode       = '';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function fmt(n) { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(n); }
@@ -445,109 +381,74 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── Apply format-specific theming ──────────────────────────────────────────
 function applyTheme(format) {
   detectedFormat = format;
-  var isLex = format === 'lex';
-  var isMtd = format === 'mtd';
-  var isBar = format === 'bar';
-  var isInv = format === 'inv';
-  var isBst = format === 'bst';
-  var accentHex  = isLex ? '#4a9eff' : (isMtd ? '#2dd4bf' : (isBar ? '#f97316' : (isInv ? '#e879f9' : (isBst ? '#34d399' : '#a78bfa'))));
-  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : (isMtd ? 'rgba(45,212,191,0.05)' : (isBar ? 'rgba(249,115,22,0.05)' : (isInv ? 'rgba(232,121,249,0.05)' : (isBst ? 'rgba(52,211,153,0.05)' : 'rgba(167,139,250,0.05)'))));
+  var isLex   = format === 'lex';
+  var isMtd   = format === 'mtd';
+  var isBar   = format === 'bar';
+  var isInv   = format === 'inv';
+  var isBst   = format === 'bst';
+  var isMtdSl = format === 'mtdsl';
+
+  var accentHex = isLex ? '#4a9eff' : (isMtd ? '#2dd4bf' : (isBar ? '#f97316' : (isInv ? '#e879f9' : (isBst ? '#34d399' : (isMtdSl ? '#f59e0b' : '#a78bfa')))));
+  var accentRgba = isLex ? 'rgba(74,158,255,0.05)' : (isMtd ? 'rgba(45,212,191,0.05)' : (isBar ? 'rgba(249,115,22,0.05)' : (isInv ? 'rgba(232,121,249,0.05)' : (isBst ? 'rgba(52,211,153,0.05)' : (isMtdSl ? 'rgba(245,158,11,0.05)' : 'rgba(167,139,250,0.05)')))));
 
   document.documentElement.style.setProperty('--accent', accentHex);
-
   var styleEl = document.getElementById('dynamic-style');
   if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'dynamic-style'; document.head.appendChild(styleEl); }
   styleEl.textContent = '.drop-zone:hover,.drop-zone.dragging{background:' + accentRgba + ';}';
 
   var badge = document.getElementById('format-badge');
   badge.className = 'format-badge ' + format;
-  document.getElementById('format-badge-text').textContent = isLex ? 'LEX detected' : (isMtd ? 'MTD CB detected' : (isBar ? 'BarBooks detected' : (isInv ? 'InvoicesPaid detected' : (isBst ? 'BarStat detected' : 'Meridian detected'))));
-
-  document.getElementById('hdr-tag').textContent = isLex ? 'LEX' : (isMtd ? 'MTD CB' : (isBar ? 'BarBooks' : (isInv ? 'InvoicesPaid' : (isBst ? 'BarStat' : 'Meridian'))));
+  document.getElementById('format-badge-text').textContent =
+    isLex ? 'LEX detected' : (isMtd ? 'MTD CB detected' : (isBar ? 'BarBooks detected' : (isInv ? 'InvoicesPaid detected' : (isBst ? 'BarStat detected' : (isMtdSl ? 'MTD SL detected' : 'Meridian detected')))));
+  document.getElementById('hdr-tag').textContent =
+    isLex ? 'LEX' : (isMtd ? 'MTD CB' : (isBar ? 'BarBooks' : (isInv ? 'InvoicesPaid' : (isBst ? 'BarStat' : (isMtdSl ? 'MTD SL' : 'Meridian')))));
 
   var copyBtn = document.getElementById('copy-btn');
-  if (isLex) {
-    copyBtn.style.background  = '#1a3a6e';
-    copyBtn.style.borderColor = '#2a5298';
-    copyBtn.style.color       = '#7ab3ff';
-  } else if (isMtd) {
-    copyBtn.style.background  = '#0f2e2e';
-    copyBtn.style.borderColor = '#1a6e6e';
-    copyBtn.style.color       = '#5eead4';
-  } else if (isBar) {
-    copyBtn.style.background  = '#2e1a0a';
-    copyBtn.style.borderColor = '#7a3a10';
-    copyBtn.style.color       = '#fdba74';
-  } else if (isInv) {
-    copyBtn.style.background  = '#2e0a2e';
-    copyBtn.style.borderColor = '#7a1a7a';
-    copyBtn.style.color       = '#f0abfc';
-  } else if (isBst) {
-    copyBtn.style.background  = '#0a2e1a';
-    copyBtn.style.borderColor = '#1a7a4a';
-    copyBtn.style.color       = '#6ee7b7';
-  } else {
-    copyBtn.style.background  = '#2a1a6e';
-    copyBtn.style.borderColor = '#4a2aae';
-    copyBtn.style.color       = '#c4b5fd';
-  }
+  if (isLex)        { copyBtn.style.background='#1a3a6e'; copyBtn.style.borderColor='#2a5298'; copyBtn.style.color='#7ab3ff'; }
+  else if (isMtd)   { copyBtn.style.background='#0f2e2e'; copyBtn.style.borderColor='#1a6e6e'; copyBtn.style.color='#5eead4'; }
+  else if (isBar)   { copyBtn.style.background='#2e1a0a'; copyBtn.style.borderColor='#7a3a10'; copyBtn.style.color='#fdba74'; }
+  else if (isInv)   { copyBtn.style.background='#2e0a2e'; copyBtn.style.borderColor='#7a1a7a'; copyBtn.style.color='#f0abfc'; }
+  else if (isBst)   { copyBtn.style.background='#0a2e1a'; copyBtn.style.borderColor='#1a7a4a'; copyBtn.style.color='#6ee7b7'; }
+  else if (isMtdSl) { copyBtn.style.background='#2e1f0a'; copyBtn.style.borderColor='#7a5010'; copyBtn.style.color='#fcd34d'; }
+  else              { copyBtn.style.background='#2a1a6e'; copyBtn.style.borderColor='#4a2aae'; copyBtn.style.color='#c4b5fd'; }
 
-  document.getElementById('info-grid').style.display  = 'grid';
-  document.getElementById('legend').style.display     = (format === 'meridian') ? 'flex' : 'none';
-
-  document.getElementById('info-barrister-label').textContent = isLex ? 'Barrister(s)' : (isMtd ? 'Files' : (isInv ? 'Barrister' : (isBst ? 'Barrister Code' : 'Barrister')));
-  document.getElementById('info-period-label').textContent    = 'Period';
-
-  document.getElementById('vat-src-label').textContent   = isLex ? 'LEX VAT (from report totals)' : (isMtd ? 'MTD CB VAT (sum from source)' : (isBar ? 'BarBooks VAT (from Totals sheet)' : (isInv ? 'InvoicesPaid VAT (sum from rows)' : (isBst ? 'BarStat VAT (sum from source)' : 'Meridian VAT (from Barrister Total row)'))));
-  document.getElementById('src-total-label').textContent = isLex ? 'LEX total' : (isMtd ? 'MTD CB total' : (isBar ? 'BarBooks total' : (isInv ? 'InvoicesPaid total' : (isBst ? 'BarStat total' : 'Meridian total'))));
+  document.getElementById('info-grid').style.display = 'grid';
+  document.getElementById('legend').style.display    = (format === 'meridian') ? 'flex' : 'none';
+  document.getElementById('info-barrister-label').textContent =
+    isLex ? 'Barrister(s)' : (isMtd ? 'Files' : (isInv ? 'Barrister' : (isBst ? 'Barrister Code' : (isMtdSl ? 'Files' : 'Barrister'))));
+  document.getElementById('vat-src-label').textContent =
+    isLex ? 'LEX VAT (from report totals)' : (isMtd ? 'MTD CB VAT (sum from source)' : (isBar ? 'BarBooks VAT (from Totals sheet)' : (isInv ? 'InvoicesPaid VAT (sum from rows)' : (isBst ? 'BarStat VAT (sum from source)' : (isMtdSl ? 'MTD SL VAT (sum of TaxAmount column)' : 'Meridian VAT (from Barrister Total row)')))));
+  document.getElementById('src-total-label').textContent =
+    isLex ? 'LEX total' : (isMtd ? 'MTD CB total' : (isBar ? 'BarBooks total' : (isInv ? 'InvoicesPaid total' : (isBst ? 'BarStat total' : (isMtdSl ? 'MTD SL total' : 'Meridian total')))));
 }
 
 // ── Format detection ───────────────────────────────────────────────────────
-// Returns 'lex', 'meridian', or null.
 function detectFormat(wb) {
   var skip = ['REPORT TOTALS','ALL BARRISTERS','Case Type Totals','Case Funding Totals'];
   var hasLex = wb.SheetNames.some(function(n) {
     if (skip.indexOf(n) !== -1) return false;
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
-    return rows.some(function(r) {
-      return r && r.some(function(c) {
-        return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1;
-      });
-    });
+    return rows.some(function(r) { return r && r.some(function(c) { return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1; }); });
   });
   if (hasLex) return 'lex';
 
-  // BarBooks: barrister sheet has 'Matter ID' header; skip summary sheets
   var barSkip = ['Totals', 'All barristers'];
   var hasBar = wb.SheetNames.some(function(n) {
     if (barSkip.indexOf(n) !== -1) return false;
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
-    return rows.some(function(r) {
-      return r && r.some(function(c) {
-        return typeof c === 'string' && c.toUpperCase().indexOf('MATTER ID') !== -1;
-      });
-    });
+    return rows.some(function(r) { return r && r.some(function(c) { return typeof c === 'string' && c.toUpperCase().indexOf('MATTER ID') !== -1; }); });
   });
   if (hasBar) return 'bar';
 
-  // InvoicesPaid: single sheet with 'Invoice Reference' and 'Receipt VAT number' header cols
   var hasInv = wb.SheetNames.some(function(n) {
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
-    return rows.some(function(r) {
-      return r && r.some(function(c) {
-        return typeof c === 'string' && c.trim() === 'Invoice Reference';
-      });
-    });
+    return rows.some(function(r) { return r && r.some(function(c) { return typeof c === 'string' && c.trim() === 'Invoice Reference'; }); });
   });
   if (hasInv) return 'inv';
 
   var hasMeridian = wb.SheetNames.some(function(n) {
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null, raw: true });
-    return rows.some(function(r) {
-      return r && r.some(function(c) {
-        return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1;
-      });
-    });
+    return rows.some(function(r) { return r && r.some(function(c) { return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1; }); });
   });
   if (hasMeridian) return 'meridian';
 
@@ -561,78 +462,111 @@ function parseFiles(files) {
   var xlsFiles = Array.from(files).filter(function(f){ return !f.name.toLowerCase().endsWith('.csv'); });
 
   if (csvFiles.length > 0 && xlsFiles.length > 0) {
-    showErr('Please upload either CSV files or a LEX/Meridian (.xlsx/.xls) file — not both at once.');
+    showErr('Please upload either CSV files or .xlsx/.xls files — not both at once.');
     return;
   }
+
+  // ── CSV path (unchanged) ─────────────────────────────────────────────────
   if (csvFiles.length > 0) {
-    // BarStat: single CSV — detect by sniffing first data line (no header, positional)
-    if (csvFiles.length === 1) {
-      var bstReader = new FileReader();
-      bstReader.onload = function(e) {
-        var firstLines = e.target.result.split(/\r?\n/).slice(0, 3).filter(Boolean);
+    var sniffFile = csvFiles[0];
+    var sniffReader = new FileReader();
+    sniffReader.onload = function(e) {
+      var firstLines = e.target.result.split(/\r?\n/).slice(0, 3).filter(Boolean);
+      var lbl = document.getElementById('drop-label');
+      lbl.textContent = csvFiles.map(function(f){ return f.name; }).join(', ');
+      lbl.classList.add('active');
+      var isMtdSl = firstLines.some(function(line) {
+        return line.indexOf('*InvoiceNumber') !== -1 && line.indexOf('*UnitAmount') !== -1;
+      });
+      if (isMtdSl) {
+        if (csvFiles.length > 3) { showErr('Maximum 3 MTD SL files at a time.'); return; }
+        parseMtdSlCsvFiles(csvFiles); return;
+      }
+      if (csvFiles.length === 1) {
         var isBarStat = firstLines.some(function(line) {
           var cols = line.split(',');
-          // BarStat: col 7 = DD/MM/YYYY date, col 13 = 'IN' or 'OUT', col 9/10/11 are numeric
           return cols.length >= 14 &&
             /^\d{2}\/\d{2}\/\d{4}$/.test((cols[7] || '').trim()) &&
             /^(IN|OUT)$/i.test((cols[13] || '').trim()) &&
             !isNaN(parseFloat(cols[9])) && !isNaN(parseFloat(cols[10]));
         });
-        var lbl = document.getElementById('drop-label');
-        lbl.textContent = csvFiles[0].name;
-        lbl.classList.add('active');
-        if (isBarStat) {
-          parseBarStatCsvFile(csvFiles[0]);
-        } else {
-          parseMtdCsvFiles(csvFiles);
-        }
-      };
-      bstReader.readAsText(csvFiles[0]);
-      return;
-    }
-    // Multiple CSVs — must be MTD CB
-    if (csvFiles.length > 3) { showErr('Maximum 3 MTD CB files at a time.'); return; }
-    var lbl = document.getElementById('drop-label');
-    lbl.textContent = csvFiles.map(function(f){ return f.name; }).join(', ');
-    lbl.classList.add('active');
-    parseMtdCsvFiles(csvFiles);
+        if (isBarStat) { parseBarStatCsvFile(csvFiles[0]); return; }
+      }
+      if (csvFiles.length > 3) { showErr('Maximum 3 MTD CB files at a time.'); return; }
+      parseMtdCsvFiles(csvFiles);
+    };
+    sniffReader.readAsText(sniffFile);
     return;
   }
-  if (xlsFiles.length > 1) { showErr('Please upload one LEX or Meridian file at a time.'); return; }
-  var file = xlsFiles[0];
+
+  // ── XLSX path — supports 1–3 files ──────────────────────────────────────
+  if (xlsFiles.length === 0) { showErr('No files selected.'); return; }
+  if (xlsFiles.length > 3)   { showErr('Maximum 3 .xlsx/.xls files at a time.'); return; }
+
   var lbl = document.getElementById('drop-label');
-  lbl.textContent = file.name;
+  lbl.textContent = xlsFiles.map(function(f){ return f.name; }).join(', ');
   lbl.classList.add('active');
 
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var wb = XLSX.read(e.target.result, { type: 'array', cellDates: false, raw: true });
-      var format = detectFormat(wb);
-      if (!format) {
-        showErr('Unrecognised file — could not find a CASE ID (LEX) or CASE NO (Meridian) header column. Please check this is a LEX or Meridian Payment Summary.');
-        return;
+  // Read all workbooks in parallel then process together
+  var workbooks = new Array(xlsFiles.length);
+  var doneCount = 0;
+
+  xlsFiles.forEach(function(file, idx) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        workbooks[idx] = XLSX.read(e.target.result, { type: 'array', cellDates: false, raw: true });
+      } catch(ex) {
+        showErr('Could not read ' + file.name + ': ' + ex.message); return;
       }
-      applyTheme(format);
-      if (format === 'lex') { parseLex(wb); } else if (format === 'bar') { parseBarBooks(wb); } else if (format === 'inv') { parseInvoicesPaid(wb); } else { parseMeridian(wb); }
-    } catch(ex) { showErr(ex.message + (ex.stack ? ' — ' + ex.stack.split('\n')[1] : '')); }
-  };
-  reader.readAsArrayBuffer(file);
+      doneCount++;
+      if (doneCount === xlsFiles.length) processWorkbooks(workbooks, xlsFiles);
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Called once all workbooks have loaded
+function processWorkbooks(workbooks, files) {
+  // Detect format of each workbook and ensure they are all the same
+  var formats = workbooks.map(function(wb, i) {
+    var f = detectFormat(wb);
+    if (!f) { showErr('Unrecognised file "' + files[i].name + '" — could not detect format (no CASE ID or CASE NO column).'); return null; }
+    return f;
+  });
+  if (formats.indexOf(null) !== -1) return; // error already shown
+
+  var uniqueFormats = formats.filter(function(v, i, a){ return a.indexOf(v) === i; });
+  if (uniqueFormats.length > 1) {
+    showErr('Mixed formats detected (' + uniqueFormats.join(', ') + '). All files must be the same format (e.g. all LEX or all Meridian).');
+    return;
+  }
+
+  var format = uniqueFormats[0];
+
+  // Only LEX and Meridian support multi-file merging; others must be single files
+  if (format !== 'lex' && format !== 'meridian' && workbooks.length > 1) {
+    showErr(format.charAt(0).toUpperCase() + format.slice(1) + ' format only supports a single file at a time.');
+    return;
+  }
+
+  applyTheme(format);
+  if      (format === 'lex')      parseLexMulti(workbooks, files);
+  else if (format === 'meridian') parseMeridianMulti(workbooks, files);
+  else if (format === 'bar')      parseBarBooks(workbooks[0]);
+  else if (format === 'inv')      parseInvoicesPaid(workbooks[0]);
 }
 
 function parseFile(file) { parseFiles([file]); }
 
 // ════════════════════════════════════════════════════════════════════════════
-// LEX PARSER  (from lex_payment_parser_v3.html — unchanged logic)
+// LEX PARSER — accepts an array of workbooks (1–3)
 // ════════════════════════════════════════════════════════════════════════════
-function parseLex(wb) {
+function parseLexMulti(workbooks, files) {
   var skip = ['REPORT TOTALS','ALL BARRISTERS','Case Type Totals','Case Funding Totals'];
 
   function extractTotalsFromRows(rows, totalColHint, vatColHint) {
-    var totalPatterns = [
-      /total\s*pyt|pyt\s*total/i, /pyt\s*total/i, /total\s*payments?/i,
-      /^totals?\s*\(/i, /^totals?$/i, /^payments?$/i, /^payment$/i,
-    ];
+    var totalPatterns = [/total\s*pyt|pyt\s*total/i,/pyt\s*total/i,/total\s*payments?/i,/^totals?\s*\(/i,/^totals?$/i,/^payments?$/i,/^payment$/i];
     for (var pi = 0; pi < totalPatterns.length; pi++) {
       for (var ri = 0; ri < rows.length; ri++) {
         var row = rows[ri]; if (!row) continue;
@@ -654,179 +588,165 @@ function parseLex(wb) {
     return null;
   }
 
-  var psSheets = wb.SheetNames.filter(function(n) {
-    if (skip.indexOf(n) !== -1) return false;
-    var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
-    return rows.some(function(r) {
-      return r && r.some(function(c) {
-        return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1;
-      });
-    });
-  });
-
   parsedRows = [];
-  var totalPyt = null, lexVat = null, sheetTotals = [];
-  var lexVatColSum = 0;  // sum of LEX's own per-row VAT column, used for the VAT check display
+  var allSheetTotals = [];
+  var lexVatColSum = 0;
+  var allPsSheetNames = [];
+  var allBarristers = [], allPeriods = [];
 
-  for (var si = 0; si < psSheets.length; si++) {
-    var sheetName = psSheets[si];
-    var ws  = wb.Sheets[sheetName];
-    var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+  workbooks.forEach(function(wb, wbIdx) {
+    var psSheets = wb.SheetNames.filter(function(n) {
+      if (skip.indexOf(n) !== -1) return false;
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
+      return rows.some(function(r) { return r && r.some(function(c) { return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1; }); });
+    });
 
-    var headerIdx = -1;
-    for (var i = 0; i < raw.length; i++) {
-      if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1; })) {
-        headerIdx = i; break;
+    // Track all sheet names across files for the info card
+    psSheets.forEach(function(n){ allPsSheetNames.push(n); });
+
+    // Extract barrister name + period from the first sheet of this workbook
+    var firstWs  = wb.Sheets[psSheets[0]];
+    var firstRaw = XLSX.utils.sheet_to_json(firstWs, { header: 1, defval: null });
+    var wbBarrister = psSheets.join(', ');
+    var wbPeriod    = '—';
+    outer: for (var pi = 0; pi < Math.min(10, firstRaw.length); pi++) {
+      var pr = firstRaw[pi]; if (!pr) continue;
+      for (var pj = 0; pj < pr.length; pj++) {
+        if (typeof pr[pj] !== 'string') continue;
+        var cell = pr[pj].trim();
+        var nm = cell.match(/\bfor\s+(.+?)\s+from\s+\d{2}\/\d{2}\/\d{4}/i);
+        if (nm) wbBarrister = nm[1].trim();
+        var pm = cell.match(/from\s+(\d{2}\/\d{2}\/\d{4}\s+to\s+\d{2}\/\d{2}\/\d{4})/i);
+        if (pm) wbPeriod = pm[1].trim();
+        if (wbBarrister !== psSheets.join(', ') && wbPeriod !== '—') break outer;
       }
     }
-    if (headerIdx === -1) continue;
+    allBarristers.push(wbBarrister);
+    allPeriods.push(wbPeriod);
 
-    var headers = raw[headerIdx].map(function(h){ return h ? String(h).toUpperCase().trim() : ''; });
-    function colExact(name) { return headers.findIndex(function(h){ return h === name; }); }
-    function col(name) { var e = colExact(name); return e !== -1 ? e : headers.findIndex(function(h){ return h.indexOf(name) !== -1; }); }
+    for (var si = 0; si < psSheets.length; si++) {
+      var sheetName = psSheets[si];
+      var ws  = wb.Sheets[sheetName];
+      var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
 
-    var caseIdC  = col('CASE ID'),  companyC = col('COMPANY'), titleC = col('CASE TITLE');
-    var receivedC= col('RECEIVED'), vatPctC  = col('VAT%'),    amountC = col('TOTAL');
-    var taxnoC   = col('TAXNO'),    vatAmtC  = colExact('VAT');
-    // netAmtC = the AMOUNT column (net excl. VAT) — distinct from amountC which is TOTAL (gross)
-    // Used only for detecting split net/VAT pairs; output amounts always use amountC (TOTAL).
-    var netAmtC  = col('AMOUNT');
-
-    var outStart = -1;
-    for (var i = headerIdx; i < raw.length; i++) {
-      if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().trim() === 'PAYMENTS OUT'; })) {
-        outStart = i; break;
+      var headerIdx = -1;
+      for (var i = 0; i < raw.length; i++) {
+        if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE ID') !== -1; })) { headerIdx = i; break; }
       }
-    }
+      if (headerIdx === -1) continue;
 
-    var st = extractTotalsFromRows(raw, amountC !== -1 ? amountC : -1, vatAmtC !== -1 ? vatAmtC : -1);
-    if (st) sheetTotals.push(st);
+      var headers = raw[headerIdx].map(function(h){ return h ? String(h).toUpperCase().trim() : ''; });
+      function colExact(name) { return headers.findIndex(function(h){ return h === name; }); }
+      function col(name) { var e = colExact(name); return e !== -1 ? e : headers.findIndex(function(h){ return h.indexOf(name) !== -1; }); }
 
-    // ── First pass: collect raw data rows for this sheet so we can detect split pairs ──
-    // A "split pair" is two rows with the same TAXNO where one has net>0/vat=0 (vatOverride)
-    // and the other has net=0/vat>0 (vatOnly). LEX occasionally splits one payment across
-    // two rows like this. We merge them into a single 20% row (net+vat = gross).
-    var sheetDataRows = [];
-    for (var i = headerIdx + 1; i < raw.length; i++) {
-      var row = raw[i]; if (!row) continue;
-      var cid = row[caseIdC]; if (!cid) continue;
-      var cidStr = String(cid).trim();
-      if (!cidStr || !/^\d/.test(cidStr)) continue;
-      var netAmt  = netAmtC !== -1 ? (typeof row[netAmtC] === 'number' ? row[netAmtC] : parseFloat(row[netAmtC]) || 0) : 0;
-      var vatAmt  = typeof row[vatAmtC] === 'number' ? row[vatAmtC] : parseFloat(row[vatAmtC]) || 0;
-      var vatPct  = typeof row[vatPctC] === 'number' ? row[vatPctC] : parseFloat(row[vatPctC]);
-      var taxno   = row[taxnoC] ? String(row[taxnoC]).trim() : '';
-      sheetDataRows.push({ rawIdx: i, row: row, cidStr: cidStr, netAmt: netAmt, vatAmt: vatAmt, vatPct: vatPct, taxno: taxno });
-    }
+      var caseIdC  = col('CASE ID'),  companyC = col('COMPANY'), titleC = col('CASE TITLE');
+      var receivedC= col('RECEIVED'), vatPctC  = col('VAT%'),    amountC = col('TOTAL');
+      var taxnoC   = col('TAXNO'),    vatAmtC  = colExact('VAT');
+      var netAmtC  = col('AMOUNT');
 
-    // Build a set of indices that are the net-only partner of a vat-only row
-    var mergedAsPartner = {};  // rawIdx -> true
-    var vatOnlyPairs    = {};  // rawIdx of vatOnly row -> rawIdx of its net-only partner
-    for (var di = 0; di < sheetDataRows.length; di++) {
-      var dr = sheetDataRows[di];
-      var isVatOnly = (dr.vatPct >= 0.15) && (Math.abs(dr.netAmt) < 0.01) && (Math.abs(dr.vatAmt) > 0.01);
-      if (!isVatOnly) continue;
-      // Find a matching net-only row: same taxno, vat%=20, net>0, vat=0
-      for (var dj = 0; dj < sheetDataRows.length; dj++) {
-        if (dj === di) continue;
-        var dr2 = sheetDataRows[dj];
-        if (dr2.taxno === dr.taxno && dr2.vatPct >= 0.15 && Math.abs(dr2.vatAmt) < 0.01 && Math.abs(dr2.netAmt) > 0.01 && !mergedAsPartner[dr2.rawIdx]) {
-          vatOnlyPairs[dr.rawIdx]     = dr2.rawIdx;
-          mergedAsPartner[dr2.rawIdx] = true;
-          break;
+      var outStart = -1;
+      for (var i = headerIdx; i < raw.length; i++) {
+        if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().trim() === 'PAYMENTS OUT'; })) { outStart = i; break; }
+      }
+
+      var st = extractTotalsFromRows(raw, amountC !== -1 ? amountC : -1, vatAmtC !== -1 ? vatAmtC : -1);
+      if (st) allSheetTotals.push(st);
+
+      // Determine whether we're in a multi-sheet context (affects description format)
+      var totalSheetCount = allPsSheetNames.length; // will grow as more wbs processed but good enough
+
+      // ── First pass: collect raw data rows ──
+      var sheetDataRows = [];
+      for (var i = headerIdx + 1; i < raw.length; i++) {
+        var row = raw[i]; if (!row) continue;
+        var cid = row[caseIdC]; if (!cid) continue;
+        var cidStr = String(cid).trim();
+        if (!cidStr || !/^\d/.test(cidStr)) continue;
+        var netAmt = netAmtC !== -1 ? (typeof row[netAmtC] === 'number' ? row[netAmtC] : parseFloat(row[netAmtC]) || 0) : 0;
+        var vatAmt = typeof row[vatAmtC] === 'number' ? row[vatAmtC] : parseFloat(row[vatAmtC]) || 0;
+        var vatPct = typeof row[vatPctC] === 'number' ? row[vatPctC] : parseFloat(row[vatPctC]);
+        var taxno  = row[taxnoC] ? String(row[taxnoC]).trim() : '';
+        sheetDataRows.push({ rawIdx: i, row: row, cidStr: cidStr, netAmt: netAmt, vatAmt: vatAmt, vatPct: vatPct, taxno: taxno });
+      }
+
+      // Split-pair detection
+      var mergedAsPartner = {}, vatOnlyPairs = {};
+      for (var di = 0; di < sheetDataRows.length; di++) {
+        var dr = sheetDataRows[di];
+        var isVatOnly = (dr.vatPct >= 0.15) && (Math.abs(dr.netAmt) < 0.01) && (Math.abs(dr.vatAmt) > 0.01);
+        if (!isVatOnly) continue;
+        for (var dj = 0; dj < sheetDataRows.length; dj++) {
+          if (dj === di) continue;
+          var dr2 = sheetDataRows[dj];
+          if (dr2.taxno === dr.taxno && dr2.vatPct >= 0.15 && Math.abs(dr2.vatAmt) < 0.01 && Math.abs(dr2.netAmt) > 0.01 && !mergedAsPartner[dr2.rawIdx]) {
+            vatOnlyPairs[dr.rawIdx] = dr2.rawIdx; mergedAsPartner[dr2.rawIdx] = true; break;
+          }
+        }
+      }
+
+      // ── Second pass: emit rows ──
+      // Include sheetName in description when multiple sheets/files are present
+      var multiFile = workbooks.length > 1;
+
+      for (var di = 0; di < sheetDataRows.length; di++) {
+        var dr = sheetDataRows[di]; var row = dr.row; var cidStr = dr.cidStr; var taxno = dr.taxno; var vatPct = dr.vatPct; var i = dr.rawIdx;
+        if (mergedAsPartner[i]) continue;
+        var isOut    = outStart !== -1 && i > outStart;
+        var totalAmt = typeof row[amountC] === 'number' ? row[amountC] : parseFloat(row[amountC]) || 0;
+        var finalAmt = isOut ? -totalAmt : totalAmt;
+        var company  = row[companyC] ? String(row[companyC]).trim() : '';
+        var title    = (titleC !== -1 && row[titleC] && String(row[titleC]).trim()) ? String(row[titleC]).trim() : 'Anonymised';
+        // Always include sheet name in description when there are multiple sheets or files
+        var descParts = (psSheets.length > 1 || multiFile) ? [cidStr, sheetName, company, title] : [cidStr, company, title];
+        var description = descParts.filter(Boolean).join(' | ');
+        var effectiveVat = dr.vatAmt;
+        var taxType = (vatPct >= 0.15) || (isNaN(vatPct) && Math.abs(effectiveVat) > 0) ? '20% (VAT on Income)' : 'Zero Rated Income';
+        if (vatPct >= 0.15 && Math.abs(effectiveVat) > 0) { lexVatColSum += isOut ? -effectiveVat : effectiveVat; }
+
+        if (vatOnlyPairs[i] !== undefined) {
+          var partnerRawIdx = vatOnlyPairs[i], partnerDr = null;
+          for (var pk = 0; pk < sheetDataRows.length; pk++) { if (sheetDataRows[pk].rawIdx === partnerRawIdx) { partnerDr = sheetDataRows[pk]; break; } }
+          var partnerTotal = partnerDr ? (typeof partnerDr.row[amountC] === 'number' ? partnerDr.row[amountC] : parseFloat(partnerDr.row[amountC]) || 0) : 0;
+          var sign = isOut ? -1 : 1;
+          var combinedAmt = Math.round((partnerTotal + totalAmt) * 100) / 100;
+          parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * combinedAmt, description: description, taxType: '20% (VAT on Income)', reference: isOut ? description : taxno, isOut: isOut, isMerged: true, taxClass: 'blue' });
+          continue;
+        }
+
+        var vatOverride = (vatPct >= 0.15) && (Math.abs(effectiveVat) < 0.01);
+        if (vatOverride) taxType = 'Zero Rated Income';
+        var noVatPct = isNaN(vatPct) && taxType === '20% (VAT on Income)';
+        if (noVatPct && Math.abs(effectiveVat) > 0) {
+          var sign = finalAmt < 0 ? -1 : 1, absVat = Math.abs(effectiveVat);
+          var cleanAmt = Math.round(absVat * 6 * 100) / 100;
+          var adjAmt   = Math.round((Math.abs(finalAmt) - cleanAmt) * 100) / 100;
+          parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * cleanAmt, description: description, taxType: '20% (VAT on Income)', reference: isOut ? description : taxno, isOut: isOut, noVatPct: true, taxClass: 'blue' });
+          if (Math.abs(adjAmt) >= 0.01) {
+            parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * adjAmt, description: description + ' | adjustment', taxType: 'Zero Rated Income', reference: isOut ? description : taxno, isOut: isOut, noVatPct: false, isAdj: true, taxClass: 'blue' });
+          }
+        } else {
+          parsedRows.push({ date: fmtDate(row[receivedC]), amount: finalAmt, description: description, taxType: taxType, reference: isOut ? description : taxno, isOut: isOut, noVatPct: false, vatOverride: vatOverride, taxClass: 'blue' });
+        }
+      }
+
+      // Try REPORT TOTALS sheet fallback for this wb
+      if (allSheetTotals.length === 0) {
+        var rtSheet = wb.Sheets['REPORT TOTALS'];
+        if (rtSheet) {
+          var rtRaw = XLSX.utils.sheet_to_json(rtSheet, { header: 1, defval: null });
+          var s2 = extractTotalsFromRows(rtRaw, -1, -1);
+          if (s2) allSheetTotals.push(s2);
         }
       }
     }
+  }); // end workbooks.forEach
 
-    // ── Second pass: emit output rows ──────────────────────────────────────────
-    for (var di = 0; di < sheetDataRows.length; di++) {
-      var dr     = sheetDataRows[di];
-      var row    = dr.row;
-      var cidStr = dr.cidStr;
-      var taxno  = dr.taxno;
-      var vatPct = dr.vatPct;
-      var i      = dr.rawIdx;
+  // Aggregate totals
+  var totalPyt = allSheetTotals.length > 0 ? allSheetTotals.reduce(function(s,t){ return s + t.total; }, 0) : null;
+  var lexVat   = (allSheetTotals.length > 0 && allSheetTotals.every(function(t){ return t.vat !== null; }))
+    ? allSheetTotals.reduce(function(s,t){ return s + t.vat; }, 0) : null;
 
-      // Skip net-only rows that have been claimed as a merge partner
-      if (mergedAsPartner[i]) continue;
-
-      var isOut        = outStart !== -1 && i > outStart;
-      var effectiveVat = dr.vatAmt;
-      var amount       = dr.netAmt;    // the AMOUNT (net) column
-      var totalAmt     = typeof row[amountC] === 'number' ? row[amountC] : parseFloat(row[amountC]) || 0;  // TOTAL col
-      var finalAmt     = isOut ? -totalAmt : totalAmt;
-      var company      = row[companyC] ? String(row[companyC]).trim() : '';
-      var title        = (titleC !== -1 && row[titleC] && String(row[titleC]).trim()) ? String(row[titleC]).trim() : 'Anonymised';
-      var descParts    = psSheets.length > 1 ? [cidStr, sheetName, company, title] : [cidStr, company, title];
-      var description  = descParts.filter(Boolean).join(' | ');
-      var taxType      = (vatPct >= 0.15) || (isNaN(vatPct) && Math.abs(effectiveVat) > 0)
-                         ? '20% (VAT on Income)' : 'Zero Rated Income';
-
-      // Accumulate LEX's own VAT column for the display check
-      if (vatPct >= 0.15 && Math.abs(effectiveVat) > 0) { lexVatColSum += isOut ? -effectiveVat : effectiveVat; }
-
-      // ── Merge: vatOnly row + its net-only partner → one combined 20% row ──
-      if (vatOnlyPairs[i] !== undefined) {
-        // Find the partner's total (net-only row: total = net, no vat)
-        var partnerRawIdx = vatOnlyPairs[i];
-        var partnerDr = null;
-        for (var pk = 0; pk < sheetDataRows.length; pk++) {
-          if (sheetDataRows[pk].rawIdx === partnerRawIdx) { partnerDr = sheetDataRows[pk]; break; }
-        }
-        var partnerTotal = partnerDr ? (typeof partnerDr.row[amountC] === 'number' ? partnerDr.row[amountC] : parseFloat(partnerDr.row[amountC]) || 0) : 0;
-        var sign         = isOut ? -1 : 1;
-        var combinedAmt  = Math.round((partnerTotal + totalAmt) * 100) / 100;
-        parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * combinedAmt, description: description,
-          taxType: '20% (VAT on Income)', reference: isOut ? description : taxno,
-          isOut: isOut, isMerged: true, taxClass: 'blue' });
-        // Also credit the partner's VAT col to lexVatColSum if not already done
-        if (partnerDr && partnerDr.vatPct >= 0.15) { /* partner vat=0, nothing to add */ }
-        continue;
-      }
-
-      // vatOverride: VAT% = 20 but £0 VAT recorded — treat as Zero Rated
-      var vatOverride = (vatPct >= 0.15) && (Math.abs(effectiveVat) < 0.01);
-      if (vatOverride) { taxType = 'Zero Rated Income'; }
-
-      var noVatPct = isNaN(vatPct) && taxType === '20% (VAT on Income)';
-      if (noVatPct && Math.abs(effectiveVat) > 0) {
-        var sign     = finalAmt < 0 ? -1 : 1;
-        var absVat   = Math.abs(effectiveVat);
-        var cleanAmt = Math.round(absVat * 6 * 100) / 100;
-        var adjAmt   = Math.round((Math.abs(finalAmt) - cleanAmt) * 100) / 100;
-        parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * cleanAmt, description: description,
-          taxType: '20% (VAT on Income)', reference: isOut ? description : taxno,
-          isOut: isOut, noVatPct: true, taxClass: 'blue' });
-        if (Math.abs(adjAmt) >= 0.01) {
-          parsedRows.push({ date: fmtDate(row[receivedC]), amount: sign * adjAmt, description: description + ' | adjustment',
-            taxType: 'Zero Rated Income', reference: isOut ? description : taxno,
-            isOut: isOut, noVatPct: false, isAdj: true, taxClass: 'blue' });
-        }
-      } else {
-        parsedRows.push({ date: fmtDate(row[receivedC]), amount: finalAmt, description: description,
-          taxType: taxType, reference: isOut ? description : taxno,
-          isOut: isOut, noVatPct: false, vatOverride: vatOverride, taxClass: 'blue' });
-      }
-    }
-  }
-
-  // Aggregate LEX totals
-  if (sheetTotals.length > 0) {
-    totalPyt = sheetTotals.reduce(function(s,t){ return s + t.total; }, 0);
-    lexVat   = sheetTotals.every(function(t){ return t.vat !== null; })
-      ? sheetTotals.reduce(function(s,t){ return s + t.vat; }, 0) : null;
-  }
-  if (totalPyt === null) {
-    var rtSheet = wb.Sheets['REPORT TOTALS'];
-    if (rtSheet) {
-      var rtRaw = XLSX.utils.sheet_to_json(rtSheet, { header: 1, defval: null });
-      var s2 = extractTotalsFromRows(rtRaw, -1, -1);
-      if (s2) { totalPyt = s2.total; lexVat = s2.vat; }
-    }
-  }
-
-  // VAT check — use the sum of LEX's own per-row VAT column (lexVatColSum) as "Our VAT"
-  // rather than recomputing amount/6, which avoids accumulated rounding drift.
+  // VAT check
   var ourVat = round2(lexVatColSum);
   document.getElementById('vat-ours').textContent = fmt(ourVat);
   document.getElementById('vat-ours').className   = 'vat-cell-value ' + (ourVat >= 0 ? 'pos' : 'neg');
@@ -835,220 +755,206 @@ function parseLex(wb) {
   if (lexVat !== null) {
     var vm = Math.abs(ourVat - lexVat) < 0.02;
     vatBadge.textContent = vm ? '✓ VAT matches' : '✗ Difference: ' + fmt(ourVat - lexVat);
-    vatBadge.className = 'match-badge ' + (vm ? 'ok' : 'err');
+    vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
   } else { vatBadge.textContent = 'LEX VAT not found'; vatBadge.className = 'match-badge err'; }
 
+  // Warnings
   var noVatPctRows    = parsedRows.filter(function(r){ return r.noVatPct; });
   var vatOverrideRows = parsedRows.filter(function(r){ return r.vatOverride; });
   var mergedRows      = parsedRows.filter(function(r){ return r.isMerged; });
   var vatWarn = document.getElementById('vat-warning');
   var warnParts = [];
-  if (mergedRows.length > 0) {
-    warnParts.push('\u2139 ' + mergedRows.length + ' row' + (mergedRows.length > 1 ? 's have' : ' has') +
-      ' been merged from split net/VAT pairs (LEX recorded net and VAT on separate lines for the same TAXNO). See rows highlighted in amber.');
-  }
-  if (vatOverrideRows.length > 0) {
-    warnParts.push('⚠ ' + vatOverrideRows.length + ' row' + (vatOverrideRows.length > 1 ? 's have' : ' has') +
-      ' VAT% = 20 but £0 VAT recorded — treated as Zero Rated Income. See rows highlighted in amber.');
-  }
-  if (noVatPctRows.length > 0) {
-    warnParts.push('⚠ ' + noVatPctRows.length + ' row' + (noVatPctRows.length > 1 ? 's have' : ' has') +
-      ' an empty VAT% — VAT was calculated by LEX on a different base. See rows highlighted in the table.');
-  }
-  if (warnParts.length > 0) {
-    vatWarn.innerHTML = warnParts.join('<br>');
-    vatWarn.style.display = 'block';
-  } else { vatWarn.style.display = 'none'; }
+  if (mergedRows.length > 0)      warnParts.push('\u2139 ' + mergedRows.length + ' row' + (mergedRows.length > 1 ? 's have' : ' has') + ' been merged from split net/VAT pairs. See amber rows.');
+  if (vatOverrideRows.length > 0) warnParts.push('⚠ ' + vatOverrideRows.length + ' row' + (vatOverrideRows.length > 1 ? 's have' : ' has') + ' VAT% = 20 but £0 VAT recorded — treated as Zero Rated Income.');
+  if (noVatPctRows.length > 0)    warnParts.push('⚠ ' + noVatPctRows.length + ' row' + (noVatPctRows.length > 1 ? 's have' : ' has') + ' an empty VAT%.');
+  if (warnParts.length > 0) { vatWarn.innerHTML = warnParts.join('<br>'); vatWarn.style.display = 'block'; } else { vatWarn.style.display = 'none'; }
 
-  // ── LEX info cards ────────────────────────────────────────────────────────
-  // The first row of each barrister sheet contains a header string like:
-  // "Payment Summary Report For Mr Christopher Pix (CPX) from 01/12/2025 to 28/02/2026 - Generated ..."
-  // Extract the full name and period from this string.
-  var lexBarrister = psSheets.join(', ');  // fallback to sheet initials
-  var lexPeriod    = '—';
+  // Info cards — merge barrister names and periods across files
+  var uniqueBarristers = allBarristers.filter(function(v,i,a){ return a.indexOf(v) === i; });
+  var uniquePeriods    = allPeriods.filter(function(v,i,a){ return a.indexOf(v) === i && v !== '—'; });
+  var displayBarrister = uniqueBarristers.join(' · ');
+  var displayPeriod    = uniquePeriods.length > 0 ? uniquePeriods.join(' · ') : '—';
 
-  var firstWs  = wb.Sheets[psSheets[0]];
-  var firstRaw = XLSX.utils.sheet_to_json(firstWs, { header: 1, defval: null });
-  for (var pi = 0; pi < Math.min(10, firstRaw.length); pi++) {
-    var pr = firstRaw[pi]; if (!pr) continue;
-    for (var pj = 0; pj < pr.length; pj++) {
-      if (typeof pr[pj] !== 'string') continue;
-      var cell = pr[pj].trim();
-
-      // Full name: "Payment Summary Report For Mr Firstname Lastname (ABC) from ..."
-      // Capture everything between "For " and " from" as the barrister name
-      var nameMatch = cell.match(/\bfor\s+(.+?)\s+from\s+\d{2}\/\d{2}\/\d{4}/i);
-      if (nameMatch) lexBarrister = nameMatch[1].trim();
-
-      // Period: "from DD/MM/YYYY to DD/MM/YYYY"
-      var periodMatch = cell.match(/from\s+(\d{2}\/\d{2}\/\d{4}\s+to\s+\d{2}\/\d{2}\/\d{4})/i);
-      if (periodMatch) lexPeriod = periodMatch[1].trim();
-
-      if (lexBarrister !== psSheets.join(', ') && lexPeriod !== '—') break;
-    }
-    if (lexBarrister !== psSheets.join(', ') && lexPeriod !== '—') break;
+  // For period in filenames, use the span across all files
+  var allDateMatches = allPeriods.map(function(p){ return p.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/); }).filter(Boolean);
+  if (allDateMatches.length > 0) {
+    var earliest = allDateMatches.reduce(function(best, m) {
+      var d = new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+      return (!best || d < best.date) ? { date: d, str: m[1]+'/'+m[2]+'/'+m[3] } : best;
+    }, null);
+    var latest = allDateMatches.reduce(function(best, m) {
+      var d = new Date(parseInt(m[6]), parseInt(m[5])-1, parseInt(m[4]));
+      return (!best || d > best.date) ? { date: d, str: m[4]+'/'+m[5]+'/'+m[6] } : best;
+    }, null);
+    if (earliest && latest) reportPeriod = earliest.str + ' to ' + latest.str;
+  } else {
+    reportPeriod = displayPeriod !== '—' ? displayPeriod : '';
   }
 
-  document.getElementById('info-barrister').textContent = lexBarrister;
-  document.getElementById('info-period').textContent    = lexPeriod;
-  // Sheets card: show sheet name(s) (the barrister initials/code used by LEX)
-  document.getElementById('info-records').textContent   = psSheets.join(', ');
-  reportBarrister = lexBarrister;
-  reportPeriod    = lexPeriod;
-  reportCode      = psSheets.join('_');
+  document.getElementById('info-barrister').textContent = displayBarrister;
+  document.getElementById('info-period').textContent    = displayPeriod;
+  document.getElementById('info-records').textContent   = allPsSheetNames.join(', ');
+  reportBarrister = displayBarrister;
+  reportCode      = allPsSheetNames.join('_');
 
-  renderResults(totalPyt, psSheets.join(', '), 'Payments Out shown as negative');
+  renderResults(totalPyt, allPsSheetNames.join(', '), 'Payments Out shown as negative' + (workbooks.length > 1 ? ' · ' + workbooks.length + ' files merged' : ''));
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// MERIDIAN PARSER  (from meridian_payment_summary_parser.html — unchanged logic)
+// MERIDIAN PARSER — accepts an array of workbooks (1–3)
 // ════════════════════════════════════════════════════════════════════════════
-function parseMeridian(wb) {
-  var targetSheet = null;
-  for (var si = 0; si < wb.SheetNames.length; si++) {
-    var sn  = wb.SheetNames[si];
-    var raw = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: null, raw: true });
-    var hasCaseNo = raw.some(function(r) {
-      return r && r.some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1; });
-    });
-    if (hasCaseNo) { targetSheet = sn; break; }
-  }
-  if (!targetSheet) { showErr('Could not find a Meridian Payment Summary sheet (no Case No column).'); return; }
-
-  var ws  = wb.Sheets[targetSheet];
-  var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
-
-  var barristerText = '', periodText = '';
-  for (var i = 0; i < Math.min(10, raw.length); i++) {
-    var r = raw[i]; if (!r) continue;
-    for (var j = 0; j < r.length; j++) {
-      if (typeof r[j] !== 'string') continue;
-      var cell = r[j].trim();
-      if (/^barrister\s*:/i.test(cell))  barristerText = cell.replace(/^barrister\s*:\s*/i, '').trim();
-      if (/^period\s*:/i.test(cell))     periodText    = cell.replace(/^period\s*:\s*/i,    '').trim();
-    }
-  }
-
-  var headerIdx = -1;
-  for (var i = 0; i < raw.length; i++) {
-    if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1; })) {
-      headerIdx = i; break;
-    }
-  }
-  if (headerIdx === -1) { showErr('Could not find header row (Case No column).'); return; }
-
-  var headers = raw[headerIdx].map(function(h){ return h ? String(h).toUpperCase().replace(/\s+/g,' ').trim() : ''; });
-  function colOf(name) {
-    var e = headers.findIndex(function(h){ return h === name; });
-    return e !== -1 ? e : headers.findIndex(function(h){ return h.indexOf(name) !== -1; });
-  }
-
-  var COL_CASENO = colOf('CASE NO'), COL_TITLE  = colOf('CASE TITLE'), COL_SOLR  = colOf('SOLICITOR');
-  var COL_DATE   = colOf('DATE'),    COL_INVNO  = colOf('INV NO'),     COL_VATPCT = colOf('%');
-  var COL_TOTAL  = colOf('TOTAL PAID');
-  var COL_FEES = -1, COL_EXP = -1, COL_VATFEES = -1, COL_VATEXP = -1;
-
-  var feesOcc = [], expOcc = [];
-  headers.forEach(function(h,idx){ if (h === 'FEES') feesOcc.push(idx); if (h === 'EXPENSES') expOcc.push(idx); });
-  if (feesOcc.length === 0) headers.forEach(function(h,idx){ if (h.indexOf('FEES')     !== -1) feesOcc.push(idx); });
-  if (expOcc.length  === 0) headers.forEach(function(h,idx){ if (h.indexOf('EXPENSES') !== -1) expOcc.push(idx); });
-  if (feesOcc.length >= 2) { COL_FEES = feesOcc[0]; COL_VATFEES = feesOcc[1]; }
-  if (expOcc.length  >= 2) { COL_EXP  = expOcc[0];  COL_VATEXP  = expOcc[1]; }
-
+function parseMeridianMulti(workbooks, files) {
   parsedRows = [];
-  var meridianTotal = null, meridianVatFees = null, meridianVatExp = null;
+  var allMeridianTotals = 0, hasAnyTotal = false;
+  var allMeridianVat = 0, hasAnyVat = false;
+  var allTargetSheets = [], allBarristers = [], allPeriods = [], allCodes = [];
+  var overrideCount = 0;
 
-  for (var i = headerIdx + 1; i < raw.length; i++) {
-    var row = raw[i]; if (!row) continue;
-    var caseNoVal = row[COL_CASENO];
-
-    if (typeof caseNoVal === 'string') {
-      var cellStr = caseNoVal.trim();
-      if (/barrister\s+total/i.test(cellStr)) {
-        if (COL_TOTAL  !== -1 && typeof row[COL_TOTAL]  === 'number') meridianTotal   = row[COL_TOTAL];
-        if (COL_VATPCT !== -1 && typeof row[COL_VATPCT] === 'number') meridianVatFees = row[COL_VATPCT];
-        if (COL_VATEXP !== -1 && typeof row[COL_VATEXP] === 'number') meridianVatExp  = row[COL_VATEXP];
+  workbooks.forEach(function(wb) {
+    var targetSheet = null;
+    for (var si = 0; si < wb.SheetNames.length; si++) {
+      var sn = wb.SheetNames[si];
+      var raw = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: null, raw: true });
+      if (raw.some(function(r){ return r && r.some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1; }); })) {
+        targetSheet = sn; break;
       }
-      continue;
+    }
+    if (!targetSheet) { showErr('Could not find a Meridian Payment Summary sheet in one of the files.'); return; }
+    allTargetSheets.push(targetSheet);
+
+    var ws  = wb.Sheets[targetSheet];
+    var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+
+    var barristerText = '', periodText = '';
+    for (var i = 0; i < Math.min(10, raw.length); i++) {
+      var r = raw[i]; if (!r) continue;
+      for (var j = 0; j < r.length; j++) {
+        if (typeof r[j] !== 'string') continue;
+        var cell = r[j].trim();
+        if (/^barrister\s*:/i.test(cell))  barristerText = cell.replace(/^barrister\s*:\s*/i, '').trim();
+        if (/^period\s*:/i.test(cell))     periodText    = cell.replace(/^period\s*:\s*/i,    '').trim();
+      }
+    }
+    allBarristers.push(barristerText || targetSheet);
+    allPeriods.push(periodText);
+    var codeMatch = barristerText.match(/\(([^)]+)\)\s*$/);
+    allCodes.push(codeMatch ? codeMatch[1].trim() : '');
+
+    var headerIdx = -1;
+    for (var i = 0; i < raw.length; i++) {
+      if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('CASE NO') !== -1; })) { headerIdx = i; break; }
+    }
+    if (headerIdx === -1) return;
+
+    var headers = raw[headerIdx].map(function(h){ return h ? String(h).toUpperCase().replace(/\s+/g,' ').trim() : ''; });
+    function colOf(name) { var e = headers.findIndex(function(h){ return h === name; }); return e !== -1 ? e : headers.findIndex(function(h){ return h.indexOf(name) !== -1; }); }
+
+    var COL_CASENO = colOf('CASE NO'), COL_TITLE = colOf('CASE TITLE'), COL_SOLR = colOf('SOLICITOR');
+    var COL_DATE   = colOf('DATE'),    COL_INVNO = colOf('INV NO'),     COL_VATPCT = colOf('%');
+    var COL_TOTAL  = colOf('TOTAL PAID');
+    var COL_FEES = -1, COL_EXP = -1, COL_VATFEES = -1, COL_VATEXP = -1;
+    var feesOcc = [], expOcc = [];
+    headers.forEach(function(h,idx){ if (h === 'FEES') feesOcc.push(idx); if (h === 'EXPENSES') expOcc.push(idx); });
+    if (feesOcc.length === 0) headers.forEach(function(h,idx){ if (h.indexOf('FEES') !== -1) feesOcc.push(idx); });
+    if (expOcc.length  === 0) headers.forEach(function(h,idx){ if (h.indexOf('EXPENSES') !== -1) expOcc.push(idx); });
+    if (feesOcc.length >= 2) { COL_FEES = feesOcc[0]; COL_VATFEES = feesOcc[1]; }
+    if (expOcc.length  >= 2) { COL_EXP  = expOcc[0];  COL_VATEXP  = expOcc[1]; }
+
+    var wbMeridianTotal = null, wbVatFees = null, wbVatExp = null;
+
+    for (var i = headerIdx + 1; i < raw.length; i++) {
+      var row = raw[i]; if (!row) continue;
+      var caseNoVal = row[COL_CASENO];
+      if (typeof caseNoVal === 'string') {
+        if (/barrister\s+total/i.test(caseNoVal.trim())) {
+          if (COL_TOTAL  !== -1 && typeof row[COL_TOTAL]  === 'number') wbMeridianTotal = row[COL_TOTAL];
+          if (COL_VATPCT !== -1 && typeof row[COL_VATPCT] === 'number') wbVatFees = row[COL_VATPCT];
+          if (COL_VATEXP !== -1 && typeof row[COL_VATEXP] === 'number') wbVatExp  = row[COL_VATEXP];
+        }
+        continue;
+      }
+      if (typeof caseNoVal !== 'number' || !caseNoVal) continue;
+
+      var caseNo    = String(Math.floor(caseNoVal));
+      var caseTitle = COL_TITLE !== -1 && row[COL_TITLE] ? String(row[COL_TITLE]).trim() : '';
+      var solicitor = COL_SOLR  !== -1 && row[COL_SOLR]  ? String(row[COL_SOLR]).trim()  : '';
+      var invNo     = COL_INVNO !== -1 && row[COL_INVNO] ? String(Math.floor(row[COL_INVNO])) : '';
+      var dateVal   = COL_DATE  !== -1 ? row[COL_DATE] : null;
+      var dateStr   = dateVal ? String(dateVal).trim() : '';
+      if (typeof dateVal === 'number') { var pd = XLSX.SSF.parse_date_code(dateVal); dateStr = String(pd.d).padStart(2,'0') + '/' + String(pd.m).padStart(2,'0') + '/' + pd.y; }
+
+      var fees     = COL_FEES    !== -1 && typeof row[COL_FEES]    === 'number' ? row[COL_FEES]    : 0;
+      var exps     = COL_EXP     !== -1 && typeof row[COL_EXP]     === 'number' ? row[COL_EXP]     : 0;
+      var vatPct   = COL_VATPCT  !== -1 && typeof row[COL_VATPCT]  === 'number' ? row[COL_VATPCT]  : 0;
+      var vatFees  = COL_VATFEES !== -1 && typeof row[COL_VATFEES] === 'number' ? row[COL_VATFEES] : 0;
+      var vatExp   = COL_VATEXP  !== -1 && typeof row[COL_VATEXP]  === 'number' ? row[COL_VATEXP]  : 0;
+      var totalPaid = COL_TOTAL  !== -1 && typeof row[COL_TOTAL]   === 'number' ? row[COL_TOTAL]   : 0;
+      if (totalPaid === 0) continue;
+
+      var actualVat = Math.abs(vatFees) + Math.abs(vatExp);
+      var taxType   = (vatPct >= 15 && actualVat > 0) ? '20% (VAT on Income)' : 'Zero Rated Income';
+      var descParts = [caseNo, invNo ? 'Inv ' + invNo : '', solicitor, caseTitle].filter(Boolean);
+      var description = descParts.join(' | ');
+      var vatOverride = (vatPct >= 15 && actualVat === 0);
+      if (vatOverride) overrideCount++;
+      var rowClass = vatOverride ? 'row-vatoverride' : (fees > 0 && exps > 0) ? 'row-mixed' : (exps > 0 ? 'row-expenses' : 'row-in');
+      parsedRows.push({ date: dateStr, amount: round2(totalPaid), description: description, taxType: taxType, reference: invNo, rowClass: rowClass, vatOverride: vatOverride, taxClass: 'purple' });
     }
 
-    if (typeof caseNoVal !== 'number' || !caseNoVal) continue;
+    if (wbMeridianTotal !== null) { allMeridianTotals += wbMeridianTotal; hasAnyTotal = true; }
+    if (wbVatFees !== null || wbVatExp !== null) { allMeridianVat += (wbVatFees || 0) + (wbVatExp || 0); hasAnyVat = true; }
+  }); // end workbooks.forEach
 
-    var caseNo    = String(Math.floor(caseNoVal));
-    var caseTitle = COL_TITLE !== -1 && row[COL_TITLE] ? String(row[COL_TITLE]).trim() : '';
-    var solicitor = COL_SOLR  !== -1 && row[COL_SOLR]  ? String(row[COL_SOLR]).trim()  : '';
-    var invNo     = COL_INVNO !== -1 && row[COL_INVNO] ? String(Math.floor(row[COL_INVNO])) : '';
-    var dateVal   = COL_DATE  !== -1 ? row[COL_DATE] : null;
-    var dateStr   = dateVal ? String(dateVal).trim() : '';
-    if (typeof dateVal === 'number') {
-      var pd = XLSX.SSF.parse_date_code(dateVal);
-      dateStr = String(pd.d).padStart(2,'0') + '/' + String(pd.m).padStart(2,'0') + '/' + pd.y;
-    }
+  if (parsedRows.length === 0) { showErr('No payment rows found. Check that the files are Meridian Payment Summaries.'); return; }
 
-    var fees     = COL_FEES    !== -1 && typeof row[COL_FEES]    === 'number' ? row[COL_FEES]    : 0;
-    var exps     = COL_EXP     !== -1 && typeof row[COL_EXP]     === 'number' ? row[COL_EXP]     : 0;
-    var vatPct   = COL_VATPCT  !== -1 && typeof row[COL_VATPCT]  === 'number' ? row[COL_VATPCT]  : 0;
-    var vatFees  = COL_VATFEES !== -1 && typeof row[COL_VATFEES] === 'number' ? row[COL_VATFEES] : 0;
-    var vatExp   = COL_VATEXP  !== -1 && typeof row[COL_VATEXP]  === 'number' ? row[COL_VATEXP]  : 0;
-    var totalPaid = COL_TOTAL  !== -1 && typeof row[COL_TOTAL]   === 'number' ? row[COL_TOTAL]   : 0;
-
-    if (totalPaid === 0) continue;
-
-    var actualVat = Math.abs(vatFees) + Math.abs(vatExp);
-    var taxType   = (vatPct >= 15 && actualVat > 0) ? '20% (VAT on Income)' : 'Zero Rated Income';
-
-    var descParts   = [caseNo, invNo ? 'Inv ' + invNo : '', solicitor, caseTitle].filter(Boolean);
-    var description = descParts.join(' | ');
-
-    var vatOverride = (vatPct >= 15 && actualVat === 0);
-    var rowClass    = vatOverride ? 'row-vatoverride'
-      : (fees > 0 && exps > 0) ? 'row-mixed'
-      : (exps > 0 ? 'row-expenses' : 'row-in');
-
-    parsedRows.push({ date: dateStr, amount: round2(totalPaid), description: description,
-      taxType: taxType, reference: invNo, rowClass: rowClass,
-      vatOverride: vatOverride, taxClass: 'purple' });
-  }
-
-  if (parsedRows.length === 0) { showErr('No payment rows found. Check that the file is a Meridian Payment Summary.'); return; }
-
-  // Metadata cards
-  document.getElementById('info-barrister').textContent = barristerText || '—';
-  document.getElementById('info-period').textContent    = periodText    || '—';
-  document.getElementById('info-records').textContent   = targetSheet;
-  reportBarrister = barristerText;
-  reportPeriod    = periodText;
-  // Extract initials from brackets e.g. "Mr. Clement Idowu (CI)" → "CI"
-  var codeMatch = barristerText.match(/\(([^)]+)\)\s*$/);
-  reportCode = codeMatch ? codeMatch[1].trim() : '';
-
-  // VAT override warning
-  var overrideRows = parsedRows.filter(function(r){ return r.vatOverride; });
+  // VAT warning
   var vatWarn = document.getElementById('vat-warning');
-  if (overrideRows.length > 0) {
-    vatWarn.textContent = '⚠ ' + overrideRows.length + ' row' + (overrideRows.length > 1 ? 's have' : ' has') +
-      ' VAT% = 20 but £0 VAT recorded — treated as Zero Rated Income. See rows highlighted in amber.';
+  if (overrideCount > 0) {
+    vatWarn.textContent = '⚠ ' + overrideCount + ' row' + (overrideCount > 1 ? 's have' : ' has') + ' VAT% = 20 but £0 VAT recorded — treated as Zero Rated Income. See rows highlighted in amber.';
     vatWarn.style.display = 'block';
   } else { vatWarn.style.display = 'none'; }
 
   // VAT check
-  var ourVat = round2(parsedRows.reduce(function(s,r){
-    return r.taxType === '20% (VAT on Income)' ? s + round2(r.amount / 6) : s;
-  }, 0));
-  var meridianVat = (meridianVatFees !== null || meridianVatExp !== null)
-    ? round2((meridianVatFees || 0) + (meridianVatExp || 0)) : null;
-
+  var ourVat = round2(parsedRows.reduce(function(s,r){ return r.taxType === '20% (VAT on Income)' ? s + round2(r.amount / 6) : s; }, 0));
+  var meridianVat = hasAnyVat ? round2(allMeridianVat) : null;
   document.getElementById('vat-ours').textContent = fmt(ourVat);
   document.getElementById('vat-src').textContent  = meridianVat !== null ? fmt(meridianVat) : 'n/a';
   var vatBadge = document.getElementById('vat-badge');
   if (meridianVat !== null) {
     var vm = Math.abs(ourVat - meridianVat) < 0.02;
     vatBadge.textContent = vm ? '✓ VAT matches' : '✗ Difference: ' + fmt(ourVat - meridianVat);
-    vatBadge.className = 'match-badge ' + (vm ? 'ok' : 'err');
+    vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
   } else { vatBadge.textContent = 'Meridian VAT not found'; vatBadge.className = 'match-badge err'; }
 
-  renderResults(meridianTotal, targetSheet, 'All amounts are payments in (positive)');
+  // Info cards — merge across files
+  var uniqueBarristers = allBarristers.filter(function(v,i,a){ return a.indexOf(v) === i; });
+  var uniquePeriods    = allPeriods.filter(function(v,i,a){ return v && a.indexOf(v) === i; });
+  var uniqueCodes      = allCodes.filter(function(v,i,a){ return v && a.indexOf(v) === i; });
+  var displayBarrister = uniqueBarristers.join(' · ');
+  var displayPeriod    = uniquePeriods.length > 0 ? uniquePeriods.join(' · ') : '—';
+
+  // Compute merged period span for filenames
+  var allDateMatches = allPeriods.map(function(p){ return p ? p.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/) : null; }).filter(Boolean);
+  if (allDateMatches.length > 0) {
+    var earliest = allDateMatches.reduce(function(best, m) { var d = new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1])); return (!best || d < best.date) ? { date: d, str: m[1]+'/'+m[2]+'/'+m[3] } : best; }, null);
+    var latest   = allDateMatches.reduce(function(best, m) { var d = new Date(parseInt(m[6]), parseInt(m[5])-1, parseInt(m[4])); return (!best || d > best.date) ? { date: d, str: m[4]+'/'+m[5]+'/'+m[6] } : best; }, null);
+    if (earliest && latest) reportPeriod = earliest.str + ' to ' + latest.str;
+  } else { reportPeriod = uniquePeriods.length > 0 ? uniquePeriods[0] : ''; }
+
+  document.getElementById('info-barrister').textContent = displayBarrister;
+  document.getElementById('info-period').textContent    = displayPeriod;
+  document.getElementById('info-records').textContent   = allTargetSheets.join(', ');
+  reportBarrister = displayBarrister;
+  reportCode      = uniqueCodes.join('_') || allTargetSheets.join('_');
+
+  renderResults(hasAnyTotal ? round2(allMeridianTotals) : null, allTargetSheets.join(', '), 'All amounts are payments in (positive)' + (workbooks.length > 1 ? ' · ' + workbooks.length + ' files merged' : ''));
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// SINGLE-FILE WRAPPERS (BarBooks + InvoicesPaid — unchanged, single wb only)
+// ════════════════════════════════════════════════════════════════════════════
+function parseLex(wb)      { parseLexMulti([wb], []);      }
+function parseMeridian(wb) { parseMeridianMulti([wb], []); }
 
 // ── Shared results renderer ────────────────────────────────────────────────
 function renderResults(sourceTotal, sheetLabel, noteText) {
@@ -1067,12 +973,8 @@ function renderResults(sourceTotal, sheetLabel, noteText) {
   tbody.innerHTML = '';
   parsedRows.forEach(function(r) {
     var tr = document.createElement('tr');
-    // LEX rows use isAdj / noVatPct / isOut for class; Meridian rows have rowClass set directly
-    if (r.rowClass) {
-      tr.className = r.rowClass;
-    } else {
-      tr.className = r.isAdj ? 'row-adj' : (r.vatOverride ? 'row-vatwarning' : (r.noVatPct ? 'row-vatwarning' : (r.isOut ? 'row-out' : 'row-in')));
-    }
+    if (r.rowClass) { tr.className = r.rowClass; }
+    else { tr.className = r.isAdj ? 'row-adj' : (r.vatOverride ? 'row-vatwarning' : (r.noVatPct ? 'row-vatwarning' : (r.isOut ? 'row-out' : 'row-in'))); }
     tr.innerHTML =
       '<td>' + r.date + '</td>' +
       '<td class="amt ' + (r.amount < 0 ? 'neg' : 'pos') + '">' + fmt(r.amount) + '</td>' +
@@ -1087,7 +989,6 @@ function renderResults(sourceTotal, sheetLabel, noteText) {
   var ft = document.getElementById('foot-total');
   ft.textContent = fmt(ourTotal);
   ft.className   = 'amt ' + (ourTotal >= 0 ? 'pos' : 'neg');
-
   document.getElementById('sheet-note').innerHTML = 'Sheet(s): <span>' + sheetLabel + '</span> &middot; ' + noteText;
   document.getElementById('results').style.display = 'block';
   updateMarchBtn();
@@ -1097,833 +998,404 @@ function renderResults(sourceTotal, sheetLabel, noteText) {
 function buildCSV() {
   var lines = ['*Date,*Amount,Payee,Description,*TaxType,Reference,*AccountCode'];
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var autoInvSuffix = 'INV';
+  var autoInvSuffix = 'INV', autoInvCounter = 0;
   var pm = reportPeriod.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/);
   if (pm) {
-    var startMonth = parseInt(pm[2], 10), startYear = parseInt(pm[3], 10);
-    var endMonth   = parseInt(pm[5], 10), endYear   = parseInt(pm[6], 10);
-    autoInvSuffix  = (startMonth === endMonth && startYear === endYear)
-      ? MONTHS[endMonth - 1] + endYear
-      : 'QE' + MONTHS[endMonth - 1] + endYear;
+    var sm = parseInt(pm[2],10), sy = parseInt(pm[3],10), em = parseInt(pm[5],10), ey = parseInt(pm[6],10);
+    autoInvSuffix = (sm === em && sy === ey) ? MONTHS[em-1]+ey : 'QE'+MONTHS[em-1]+ey;
   }
   var autoInvCode = reportCode || 'INV';
-  var autoInvCounter = 0;
-
   parsedRows.forEach(function(r) {
     var ref = r.reference ? r.reference.trim() : '';
     if (!ref) { autoInvCounter++; ref = autoInvCode + '-' + autoInvSuffix + '-' + autoInvCounter; }
-    lines.push([
-      r.date, r.amount.toFixed(2),
-      '"' + (r.payeeOverride || selectedChambers).replace(/"/g,'""') + '"',
-      '"' + r.description.replace(/"/g,'""') + '"',
-      r.taxType,
-      '"' + ref.replace(/"/g,'""') + '"',
-      accountCode
-    ].join(','));
+    lines.push([r.date, r.amount.toFixed(2), '"'+(r.payeeOverride||selectedChambers).replace(/"/g,'""')+'"', '"'+r.description.replace(/"/g,'""')+'"', r.taxType, '"'+ref.replace(/"/g,'""')+'"', accountCode].join(','));
   });
   return lines.join('\n');
 }
-function copyCSV()     { if (parsedRows.length) navigator.clipboard.writeText(buildCSV()); }
+function copyCSV() { if (parsedRows.length) navigator.clipboard.writeText(buildCSV()); }
+
 function buildFilename() {
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-  // Primary: barrister code (CPX, CI, ACD etc.)
-  // Fallback 1: barrister name stripped of title and with spaces as underscores
-  // Fallback 2: Unknown
   var code = reportCode.replace(/[^a-zA-Z0-9_\-]/g, '');
-  if (!code) {
-    code = reportBarrister
-      .replace(/^(mr\.?|mrs\.?|ms\.?|miss\.?|dr\.?|sir\.?|lord\.?|lady\.?)\s+/i, '')
-      .replace(/\([^)]*\)\s*$/, '')  // strip trailing (initials) if present
-      .trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-zA-Z0-9_\-]/g, '');
-  }
+  if (!code) { code = reportBarrister.replace(/^(mr\.?|mrs\.?|ms\.?|miss\.?|dr\.?|sir\.?|lord\.?|lady\.?)\s+/i,'').replace(/\([^)]*\)\s*$/,'').trim().replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,''); }
   if (!code) code = 'Unknown';
-
-  // Parse period string: expects "DD/MM/YYYY to DD/MM/YYYY"
-  var suffix = 'payment_summary';  // fallback
+  var suffix = 'payment_summary';
   var m = reportPeriod.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/);
-  if (m) {
-    var startMonth = parseInt(m[2], 10);
-    var startYear  = parseInt(m[3], 10);
-    var endMonth   = parseInt(m[5], 10);
-    var endYear    = parseInt(m[6], 10);
-    var endMonthName = MONTHS[endMonth - 1];
-    suffix = (startMonth === endMonth && startYear === endYear)
-      ? endMonthName + endYear
-      : 'QE' + endMonthName + endYear;
-  }
-
+  if (m) { var sm=parseInt(m[2],10),sy=parseInt(m[3],10),em=parseInt(m[5],10),ey=parseInt(m[6],10); suffix=(sm===em&&sy===ey)?MONTHS[em-1]+ey:'QE'+MONTHS[em-1]+ey; }
   return code + '_PS_' + suffix + '.csv';
 }
 
 function downloadCSV() {
   if (!parsedRows.length) return;
   var blob = new Blob([buildCSV()], { type: 'text/csv' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = buildFilename();
-  a.click(); URL.revokeObjectURL(a.href);
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = buildFilename(); a.click(); URL.revokeObjectURL(a.href);
 }
 
 // ── Sales Xero CSV ─────────────────────────────────────────────────────────
-// Columns: *ContactName, EmailAddress, POAddressLine1–4, POCity, PORegion,
-//          POPostalCode, POCountry, *InvoiceNumber, Reference, *InvoiceDate,
-//          *DueDate, Total, InventoryItemCode, *Description, *Quantity,
-//          *UnitAmount, Discount, *AccountCode, *TaxType, TaxAmount,
-//          TrackingName1, TrackingOption1, TrackingName2, TrackingOption2,
-//          Currency, BrandingTheme
 var SALES_HEADER = '*ContactName,EmailAddress,POAddressLine1,POAddressLine2,POAddressLine3,POAddressLine4,POCity,PORegion,POPostalCode,POCountry,*InvoiceNumber,Reference,*InvoiceDate,*DueDate,Total,InventoryItemCode,*Description,*Quantity,*UnitAmount,Discount,*AccountCode,*TaxType,TaxAmount,TrackingName1,TrackingOption1,TrackingName2,TrackingOption2,Currency,BrandingTheme';
 
 function buildSalesCSVFromRows(rows) {
   if (!rows.length) return null;
   var lines = [SALES_HEADER];
-
-  // Build the period suffix for auto-generated invoice numbers (e.g. "Mar2026" or "QEMar2026")
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var autoInvSuffix = 'INV';
+  var autoInvSuffix = 'INV', autoInvCounter = 0;
   var pm = reportPeriod.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/);
-  if (pm) {
-    var startMonth = parseInt(pm[2], 10), startYear = parseInt(pm[3], 10);
-    var endMonth   = parseInt(pm[5], 10), endYear   = parseInt(pm[6], 10);
-    autoInvSuffix  = (startMonth === endMonth && startYear === endYear)
-      ? MONTHS[endMonth - 1] + endYear
-      : 'QE' + MONTHS[endMonth - 1] + endYear;
-  }
-  // Barrister code prefix (e.g. "MA")
+  if (pm) { var sm=parseInt(pm[2],10),sy=parseInt(pm[3],10),em=parseInt(pm[5],10),ey=parseInt(pm[6],10); autoInvSuffix=(sm===em&&sy===ey)?MONTHS[em-1]+ey:'QE'+MONTHS[em-1]+ey; }
   var autoInvCode = reportCode || 'INV';
-  var autoInvCounter = 0;
-
   rows.forEach(function(r) {
-    var contact     = '"' + (r.payeeOverride || selectedChambers).replace(/"/g,'""') + '"';
-    // Auto-generate invoice number if reference is blank
+    var contact = '"'+(r.payeeOverride||selectedChambers).replace(/"/g,'""')+'"';
     var ref = r.reference ? r.reference.trim() : '';
     if (!ref) { autoInvCounter++; ref = autoInvCode + '-' + autoInvSuffix + '-' + autoInvCounter; }
-    var invNumber   = '"' + ref.replace(/"/g,'""') + '"';
-    var invDate     = r.date;   // DD/MM/YYYY — Xero accepts this
-    var dueDate     = r.date;
-    var description = '"' + r.description.replace(/"/g,'""') + '"';
-    var qty         = '1';
-    var unitAmount  = r.amount.toFixed(2);
-    var acCode      = accountCode;
-    var taxType     = r.taxType;
-
-    // 29 columns total — blanks for everything not mapped
-    lines.push([
-      contact,   // *ContactName
-      '',        // EmailAddress
-      '', '', '', '',  // POAddressLine1-4
-      '', '', '', '',  // POCity, PORegion, POPostalCode, POCountry
-      invNumber, // *InvoiceNumber
-      '',        // Reference
-      invDate,   // *InvoiceDate
-      dueDate,   // *DueDate
-      '',        // Total (Xero calculates)
-      '',        // InventoryItemCode
-      description, // *Description
-      qty,       // *Quantity
-      unitAmount,// *UnitAmount
-      '',        // Discount
-      acCode,    // *AccountCode
-      taxType,   // *TaxType
-      '',        // TaxAmount
-      '', '', '', '',  // TrackingName1/Option1/Name2/Option2
-      '',        // Currency
-      ''         // BrandingTheme
-    ].join(','));
+    lines.push([contact,'','','','','','','','','','"'+ref.replace(/"/g,'""')+'"','',r.date,r.date,'','','"'+r.description.replace(/"/g,'""')+'"','1',r.amount.toFixed(2),'',accountCode,r.taxType,'','','','','',''].join(','));
   });
   return lines.join('\n');
 }
 
 function downloadSalesCSV() {
   if (!parsedRows.length) return;
-  var csv = buildSalesCSVFromRows(parsedRows);
-  if (!csv) return;
+  var csv = buildSalesCSVFromRows(parsedRows); if (!csv) return;
   var blob = new Blob([csv], { type: 'text/csv' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = buildFilename().replace('_PS_', '_SI_');
-  a.click(); URL.revokeObjectURL(a.href);
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = buildFilename().replace('_PS_','_SI_'); a.click(); URL.revokeObjectURL(a.href);
 }
 
 function downloadSalesMarchCSV() {
   var rows = getMarchRows();
-  if (!rows.length) { alert('No rows found for March 2026 (01/03/2026 – 31/03/2026).'); return; }
+  if (!rows.length) { alert('No rows found for March 2026.'); return; }
   var csv = buildSalesCSVFromRows(rows);
-  var baseName = buildFilename().replace(/_PS_.+$/, '');
-  var filename = baseName + '_SI_Mar2026.csv';
   var blob = new Blob([csv], { type: 'text/csv' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click(); URL.revokeObjectURL(a.href);
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = buildFilename().replace(/_PS_.+$/, '') + '_SI_Mar2026.csv'; a.click(); URL.revokeObjectURL(a.href);
 }
 
 // ── March 2026 filter ──────────────────────────────────────────────────────
 function isMarch2026(dateStr) {
-  // Handles DD/MM/YYYY and DD/MM/YY formats
   if (!dateStr) return false;
-  var m = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
-  if (!m) return false;
-  var month = parseInt(m[2], 10);
-  var year  = parseInt(m[3], 10);
-  if (year < 100) year += 2000; // two-digit year: 26 → 2026
+  var m = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/); if (!m) return false;
+  var month = parseInt(m[2],10), year = parseInt(m[3],10);
+  if (year < 100) year += 2000;
   return month === 3 && year === 2026;
 }
-
-function getMarchRows() {
-  return parsedRows.filter(function(r){ return isMarch2026(r.date); });
-}
+function getMarchRows() { return parsedRows.filter(function(r){ return isMarch2026(r.date); }); }
 
 function buildMarchCSV() {
-  var rows = getMarchRows();
-  if (rows.length === 0) return null;
+  var rows = getMarchRows(); if (!rows.length) return null;
   var lines = ['*Date,*Amount,Payee,Description,*TaxType,Reference,*AccountCode'];
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var autoInvSuffix = 'INV';
+  var autoInvSuffix = 'INV', autoInvCounter = 0;
   var pm = reportPeriod.match(/(\d{2})\/(\d{2})\/(\d{4})\s+to\s+(\d{2})\/(\d{2})\/(\d{4})/);
-  if (pm) {
-    var startMonth = parseInt(pm[2], 10), startYear = parseInt(pm[3], 10);
-    var endMonth   = parseInt(pm[5], 10), endYear   = parseInt(pm[6], 10);
-    autoInvSuffix  = (startMonth === endMonth && startYear === endYear)
-      ? MONTHS[endMonth - 1] + endYear
-      : 'QE' + MONTHS[endMonth - 1] + endYear;
-  }
+  if (pm) { var sm=parseInt(pm[2],10),sy=parseInt(pm[3],10),em=parseInt(pm[5],10),ey=parseInt(pm[6],10); autoInvSuffix=(sm===em&&sy===ey)?MONTHS[em-1]+ey:'QE'+MONTHS[em-1]+ey; }
   var autoInvCode = reportCode || 'INV';
-  var autoInvCounter = 0;
-
   rows.forEach(function(r) {
     var ref = r.reference ? r.reference.trim() : '';
     if (!ref) { autoInvCounter++; ref = autoInvCode + '-' + autoInvSuffix + '-' + autoInvCounter; }
-    lines.push([
-      r.date, r.amount.toFixed(2),
-      '"' + (r.payeeOverride || selectedChambers).replace(/"/g,'""') + '"',
-      '"' + r.description.replace(/"/g,'""') + '"',
-      r.taxType,
-      '"' + ref.replace(/"/g,'""') + '"',
-      accountCode
-    ].join(','));
+    lines.push([r.date, r.amount.toFixed(2), '"'+(r.payeeOverride||selectedChambers).replace(/"/g,'""')+'"', '"'+r.description.replace(/"/g,'""')+'"', r.taxType, '"'+ref.replace(/"/g,'""')+'"', accountCode].join(','));
   });
   return lines.join('\n');
 }
 
 function downloadMarchCSV() {
   var csv = buildMarchCSV();
-  if (!csv) { alert('No rows found for March 2026 (01/03/2026 – 31/03/2026).'); return; }
-  var baseName = buildFilename().replace(/\.csv$/i, '');
-  // Override suffix with Mar2026 regardless of detected period
-  var filename = baseName.replace(/_PS_.+$/, '') + '_PS_Mar2026.csv';
+  if (!csv) { alert('No rows found for March 2026.'); return; }
   var blob = new Blob([csv], { type: 'text/csv' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click(); URL.revokeObjectURL(a.href);
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = buildFilename().replace(/_PS_.+$/, '') + '_PS_Mar2026.csv'; a.click(); URL.revokeObjectURL(a.href);
 }
 
-// Update March button state after results render
 function updateMarchBtn() {
-  var btn = document.getElementById('march-btn');
-  var salesBtn = document.getElementById('sales-march-btn');
+  var btn = document.getElementById('march-btn'), salesBtn = document.getElementById('sales-march-btn');
   if (!btn) return;
   var count = getMarchRows().length;
   btn.disabled = count === 0;
-  btn.title = count > 0
-    ? 'Download ' + count + ' row' + (count === 1 ? '' : 's') + ' dated 01/03/2026 – 31/03/2026'
-    : 'No rows found for March 2026';
-  if (salesBtn) {
-    salesBtn.disabled = count === 0;
-    salesBtn.title = count > 0
-      ? 'Download Sales Invoice CSV for ' + count + ' row' + (count === 1 ? '' : 's') + ' dated 01/03/2026 – 31/03/2026'
-      : 'No rows found for March 2026';
-  }
+  btn.title = count > 0 ? 'Download ' + count + ' row' + (count===1?'':'s') + ' dated 01/03/2026 – 31/03/2026' : 'No rows found for March 2026';
+  if (salesBtn) { salesBtn.disabled = count === 0; salesBtn.title = btn.title; }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// INVOICES PAID PARSER
-// Two-row header (rows 2+3). Key columns:
-//   Col 0:  Paid (date)          Col 1:  Case ref
-//   Col 3:  Barrister Code       Col 4:  Barrister Name
-//   Col 8:  Invoice Reference    Col 22: Total Net
-//   Col 23: Total Tax (VAT)      Col 24: Total Gross (incl. VAT)
-//   Col 26: Solicitor Name       Col 31: Sol ref
-//   Col 32: Case name            Col 36: Receipt VAT number
-// VAT: Tax > 0 → '20% (VAT on Income)', Tax = 0 → 'Zero Rated Income'
-// Totals row: col 12 = 'Totals' (strings, not numbers) — compute from rows
+// INVOICES PAID PARSER  (single workbook)
 // ════════════════════════════════════════════════════════════════════════════
 function parseInvoicesPaid(wb) {
-  // Find the worksheet — typically called 'Worksheet'
   var targetSheet = null;
   for (var si = 0; si < wb.SheetNames.length; si++) {
-    var sn  = wb.SheetNames[si];
+    var sn = wb.SheetNames[si];
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: null });
-    var hasInvRef = rows.some(function(r) {
-      return r && r.some(function(c) { return typeof c === 'string' && c.trim() === 'Invoice Reference'; });
-    });
-    if (hasInvRef) { targetSheet = sn; break; }
+    if (rows.some(function(r){ return r && r.some(function(c){ return typeof c === 'string' && c.trim() === 'Invoice Reference'; }); })) { targetSheet = sn; break; }
   }
   if (!targetSheet) { showErr('Could not find InvoicesPaid sheet (no Invoice Reference column).'); return; }
 
   var ws  = wb.Sheets[targetSheet];
   var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
-
-  // ── Find header rows (two-row header: row with 'Invoice Reference') ────────
   var headerIdx = -1;
   for (var i = 0; i < raw.length; i++) {
-    if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.trim() === 'Invoice Reference'; })) {
-      headerIdx = i; break;
-    }
+    if (raw[i] && raw[i].some(function(c){ return typeof c === 'string' && c.trim() === 'Invoice Reference'; })) { headerIdx = i; break; }
   }
   if (headerIdx === -1) { showErr('Could not find header row in InvoicesPaid file.'); return; }
 
-  // Merge two header rows to resolve sub-headers (e.g. Payment/Net, Payment/Tax etc.)
-  var h1 = raw[headerIdx]     || [];
-  var h2 = raw[headerIdx + 1] || [];
-
-  // Build column index by scanning both header rows for known field names
-  function findCol(name) {
-    var nu = name.toUpperCase();
-    for (var i = 0; i < h1.length; i++) {
-      if (typeof h1[i] === 'string' && h1[i].toUpperCase().trim() === nu) return i;
-    }
-    for (var i = 0; i < h2.length; i++) {
-      if (typeof h2[i] === 'string' && h2[i].toUpperCase().trim() === nu) return i;
-    }
-    return -1;
-  }
-
-  // Fixed column positions confirmed from file inspection
-  var COL_DATE    = 0;   // Paid
-  var COL_CASEREF = 1;   // Case ref
-  var COL_BARCODE = 3;   // Barrister Code
-  var COL_BARNAME = 4;   // Barrister Name
-  var COL_INVREF  = 8;   // Invoice Reference
-  var COL_TOT_NET = 22;  // Total Net
-  var COL_TOT_TAX = 23;  // Total Tax
-  var COL_TOT_GRS = 24;  // Total Gross (incl. VAT)
-  var COL_SOLNAME = 26;  // Solicitor Name
-  var COL_SOLREF  = 31;  // Sol ref
-  var COL_CASENAME= 32;  // Case name
-  var COL_VATNO   = 36;  // Receipt VAT number
+  var COL_DATE=0, COL_CASEREF=1, COL_BARCODE=3, COL_BARNAME=4, COL_INVREF=8;
+  var COL_TOT_NET=22, COL_TOT_TAX=23, COL_TOT_GRS=24, COL_SOLNAME=26, COL_SOLREF=31, COL_CASENAME=32, COL_VATNO=36;
 
   parsedRows = [];
-  var invBarrister = '', invCode = '', invPeriod = '';
-  var sourceTotal = 0, sourceVat = 0;
-  var dataStart = headerIdx + 2; // skip both header rows
+  var invBarrister='', invCode='', invPeriod='', sourceTotal=0, sourceVat=0;
+  var dataStart = headerIdx + 2;
 
-  // ── Extract barrister + period from row 0 and row 1 ──────────────────────
   for (var i = 0; i < Math.min(headerIdx, raw.length); i++) {
     var r = raw[i]; if (!r) continue;
-    var cell = r[0];
-    if (typeof cell !== 'string') continue;
-    cell = cell.trim();
-    // "Invoices paid export: Created DD/MM/YYYY - DD/MM/YYYY"
+    var cell = r[0]; if (typeof cell !== 'string') continue; cell = cell.trim();
     var perM = cell.match(/Created\s+(\d{2}\/\d{2}\/\d{4})\s*[-\u2013]\s*(\d{2}\/\d{2}\/\d{4})/i);
     if (perM) invPeriod = perM[1] + ' to ' + perM[2];
-    // "Barrister: Full Name (CODE)"
-    var barM = cell.match(/^Barrister:\s*(.+?)\s*\(([^)]+)\)\s*(?:Ltd\s*)?$/i);
-    if (!barM) barM = cell.match(/^Barrister:\s*(.+?)\s+\(([A-Z]{2,5})\)/i);
+    var barM = cell.match(/^Barrister:\s*(.+?)\s*\(([^)]+)\)\s*(?:Ltd\s*)?$/i) || cell.match(/^Barrister:\s*(.+?)\s+\(([A-Z]{2,5})\)/i);
     if (barM) { invBarrister = barM[1].trim(); invCode = barM[2].trim(); }
   }
 
-  // ── Parse data rows ────────────────────────────────────────────────────────
   for (var i = dataStart; i < raw.length; i++) {
     var row = raw[i]; if (!row) continue;
-
-    // Stop at Totals row (col 12 = 'Totals' string)
     if (typeof row[12] === 'string' && row[12].trim().toLowerCase() === 'totals') break;
-
     var grossVal = typeof row[COL_TOT_GRS] === 'number' ? row[COL_TOT_GRS] : null;
     if (grossVal === null || grossVal === 0) continue;
-
-    // Date: stored as JS Date object by xlsx library
-    var dateStr = '';
-    var dateVal = row[COL_DATE];
+    var dateStr = '', dateVal = row[COL_DATE];
     if (dateVal) {
-      if (typeof dateVal === 'number') {
-        var pd = XLSX.SSF.parse_date_code(dateVal);
-        dateStr = String(pd.d).padStart(2,'0') + '/' + String(pd.m).padStart(2,'0') + '/' + pd.y;
-      } else if (typeof dateVal === 'string') {
-        dateStr = dateVal.trim();
-      } else {
-        // xlsx may parse dates as objects with {y,m,d} when raw:true
-        try {
-          var ds = XLSX.SSF.parse_date_code(dateVal);
-          dateStr = String(ds.d).padStart(2,'0') + '/' + String(ds.m).padStart(2,'0') + '/' + ds.y;
-        } catch(e) { dateStr = ''; }
-      }
+      if (typeof dateVal === 'number') { var pd=XLSX.SSF.parse_date_code(dateVal); dateStr=String(pd.d).padStart(2,'0')+'/'+String(pd.m).padStart(2,'0')+'/'+pd.y; }
+      else if (typeof dateVal === 'string') { dateStr = dateVal.trim(); }
+      else { try { var ds=XLSX.SSF.parse_date_code(dateVal); dateStr=String(ds.d).padStart(2,'0')+'/'+String(ds.m).padStart(2,'0')+'/'+ds.y; } catch(e){} }
     }
-
-    var taxVal   = typeof row[COL_TOT_TAX] === 'number' ? row[COL_TOT_TAX] : 0;
-    var is20pct  = Math.abs(taxVal) > 0.001;
-    var taxType  = is20pct ? '20% (VAT on Income)' : 'Zero Rated Income';
-
-    var vatOverride = false; // InvoicesPaid explicitly records 0 tax for zero-rated rows — no override needed
-
-    var invRef   = COL_INVREF  !== -1 && row[COL_INVREF]   ? String(row[COL_INVREF]).trim()   : '';
-    var caseRef  = COL_CASEREF !== -1 && row[COL_CASEREF]  ? String(row[COL_CASEREF]).trim()  : '';
-    var solName  = COL_SOLNAME !== -1 && row[COL_SOLNAME]  ? String(row[COL_SOLNAME]).trim()  : '';
-    var caseName = COL_CASENAME!== -1 && row[COL_CASENAME] ? String(row[COL_CASENAME]).trim() : '';
-    var solRef   = COL_SOLREF  !== -1 && row[COL_SOLREF]   ? String(row[COL_SOLREF]).trim()   : '';
-
-    var descParts = [caseRef ? 'Case ' + caseRef : '', invRef ? 'Inv ' + invRef : '', solName, caseName].filter(Boolean);
-    var description = descParts.join(' | ');
-
-    sourceTotal += grossVal;
-    sourceVat   += taxVal;
-
-    parsedRows.push({
-      date:        dateStr,
-      amount:      round2(grossVal),
-      description: description,
-      taxType:     taxType,
-      reference:   invRef,
-      rowClass:    grossVal < 0 ? 'row-out' : 'row-in',
-      vatOverride: false,
-      taxClass:    'pink'
-    });
+    var taxVal = typeof row[COL_TOT_TAX] === 'number' ? row[COL_TOT_TAX] : 0;
+    var taxType = Math.abs(taxVal) > 0.001 ? '20% (VAT on Income)' : 'Zero Rated Income';
+    var invRef   = row[COL_INVREF]   ? String(row[COL_INVREF]).trim()   : '';
+    var caseRef  = row[COL_CASEREF]  ? String(row[COL_CASEREF]).trim()  : '';
+    var solName  = row[COL_SOLNAME]  ? String(row[COL_SOLNAME]).trim()  : '';
+    var caseName = row[COL_CASENAME] ? String(row[COL_CASENAME]).trim() : '';
+    var descParts = [caseRef?'Case '+caseRef:'', invRef?'Inv '+invRef:'', solName, caseName].filter(Boolean);
+    sourceTotal += grossVal; sourceVat += taxVal;
+    parsedRows.push({ date: dateStr, amount: round2(grossVal), description: descParts.join(' | '), taxType: taxType, reference: invRef, rowClass: grossVal < 0 ? 'row-out' : 'row-in', vatOverride: false, taxClass: 'pink' });
   }
-
   if (!parsedRows.length) { showErr('No payment rows found. Check this is an InvoicesPaid export.'); return; }
-
-  // Metadata
-  // Try to extract initials from barrister name if not found in header
-  if (!invCode) {
-    var codeMatch = invBarrister.match(/\(([A-Z]{2,5})\)\s*$/);
-    invCode = codeMatch ? codeMatch[1] : parsedRows[0] && raw[dataStart] ? (raw[dataStart][COL_BARCODE] || 'INV') : 'INV';
-  }
-  reportBarrister = invBarrister || '—';
-  reportPeriod    = invPeriod    || '';
-  reportCode      = invCode      || 'INV';
-
-  document.getElementById('info-barrister').textContent = invBarrister || '—';
-  document.getElementById('info-period').textContent    = invPeriod    || '—';
+  if (!invCode) { var cm=invBarrister.match(/\(([A-Z]{2,5})\)\s*$/); invCode = cm ? cm[1] : (raw[dataStart] ? (raw[dataStart][COL_BARCODE] || 'INV') : 'INV'); }
+  reportBarrister=invBarrister||'—'; reportPeriod=invPeriod||''; reportCode=invCode||'INV';
+  document.getElementById('info-barrister').textContent = invBarrister||'—';
+  document.getElementById('info-period').textContent    = invPeriod||'—';
   document.getElementById('info-records').textContent   = targetSheet;
   document.getElementById('info-grid').style.display    = 'grid';
-
-  // VAT check — no source total row (Totals row has strings), so use our computed sum
-  sourceTotal = round2(sourceTotal);
-  sourceVat   = round2(sourceVat);
-  var ourVat  = round2(parsedRows.reduce(function(s,r){
-    return r.taxType === '20% (VAT on Income)' ? s + round2(r.amount / 6) : s;
-  }, 0));
-  document.getElementById('vat-ours').textContent = fmt(ourVat);
-  document.getElementById('vat-src').textContent  = fmt(sourceVat);
-  var vatBadge = document.getElementById('vat-badge');
-  var vm = Math.abs(ourVat - sourceVat) < 0.02;
-  vatBadge.textContent = vm ? '\u2713 VAT matches' : '\u2717 Difference: ' + fmt(ourVat - sourceVat);
-  vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
-  document.getElementById('vat-warning').style.display = 'none';
-
+  sourceTotal=round2(sourceTotal); sourceVat=round2(sourceVat);
+  var ourVat=round2(parsedRows.reduce(function(s,r){ return r.taxType==='20% (VAT on Income)'?s+round2(r.amount/6):s; },0));
+  document.getElementById('vat-ours').textContent=fmt(ourVat); document.getElementById('vat-src').textContent=fmt(sourceVat);
+  var vatBadge=document.getElementById('vat-badge'); var vm=Math.abs(ourVat-sourceVat)<0.02;
+  vatBadge.textContent=vm?'\u2713 VAT matches':'\u2717 Difference: '+fmt(ourVat-sourceVat); vatBadge.className='match-badge '+(vm?'ok':'err');
+  document.getElementById('vat-warning').style.display='none';
   renderResults(sourceTotal, targetSheet, 'All amounts are Total Gross (incl. VAT)');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// BARBOOKS PARSER
-// Columns: Matter ID, Matter title, Barrister, Initials, Firm, Solicitor,
-//          Receipt number, Tax Invoice number, Receipt date, Receipt Type,
-//          VAT %, Total (Excl. VAT), VAT, Total (Incl. VAT), Tasks (Incl. VAT), Expenses (Incl. VAT)
-// VAT %: 2 = 20%, 0 = 0%  |  Totals in 'Totals' sheet TOTALS row
+// BARBOOKS PARSER  (single workbook)
 // ════════════════════════════════════════════════════════════════════════════
 function parseBarBooks(wb) {
   var barSkip = ['Totals', 'All barristers'];
-
-  // Find barrister sheet(s) — any sheet not in barSkip that has Matter ID header
   var bbSheets = wb.SheetNames.filter(function(n) {
     if (barSkip.indexOf(n) !== -1) return false;
     var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null });
-    return rows.some(function(r) {
-      return r && r.some(function(c) {
-        return typeof c === 'string' && c.toUpperCase().indexOf('MATTER ID') !== -1;
-      });
-    });
+    return rows.some(function(r){ return r && r.some(function(c){ return typeof c === 'string' && c.toUpperCase().indexOf('MATTER ID') !== -1; }); });
   });
   if (!bbSheets.length) { showErr('Could not find a BarBooks sheet (no Matter ID column).'); return; }
 
   parsedRows = [];
-  var bbTotalInc = null, bbVat = null;
-
-  // ── Pull totals from Totals sheet ─────────────────────────────────────────
+  var bbTotalInc=null, bbVat=null;
   if (wb.Sheets['Totals']) {
     var totRaw = XLSX.utils.sheet_to_json(wb.Sheets['Totals'], { header: 1, defval: null });
-    for (var ti = 0; ti < totRaw.length; ti++) {
-      var tr = totRaw[ti];
-      if (!tr) continue;
-      var first = tr[0];
-      if (typeof first === 'string' && first.toUpperCase().trim() === 'TOTALS') {
-        // Row: TOTALS, '', Total(ExclVAT), VAT, Total(InclVAT), Tasks(InclVAT), TasksVAT, ...
-        if (typeof tr[4] === 'number') bbTotalInc = tr[4];
-        if (typeof tr[2] === 'number' && typeof tr[3] === 'number') bbVat = tr[3];
-        break;
-      }
+    for (var ti=0;ti<totRaw.length;ti++) { var tr=totRaw[ti]; if(!tr) continue; if(typeof tr[0]==='string'&&tr[0].toUpperCase().trim()==='TOTALS'){ if(typeof tr[4]==='number') bbTotalInc=tr[4]; if(typeof tr[3]==='number') bbVat=tr[3]; break; } }
+  }
+  var bbBarrister='', bbInitials='', bbPeriod='';
+  for (var si=0;si<bbSheets.length;si++) {
+    var sn=bbSheets[si], ws=wb.Sheets[sn], raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+    for (var hi=0;hi<Math.min(5,raw.length);hi++) { var hr=raw[hi]; if(!hr) continue; var cell=hr[0]; if(typeof cell!=='string') continue; cell=cell.trim(); var bm=cell.match(/^Barrister:\s*(.+?)\s*\(([^)]+)\)\s*$/i); if(bm){bbBarrister=bm[1].trim();bbInitials=bm[2].trim();} var pm=cell.match(/From\s+(\d{2}\/\d{2}\/\d{4})\s+to\s+(\d{2}\/\d{2}\/\d{4})/i); if(pm) bbPeriod=pm[1]+' to '+pm[2]; }
+    var headerIdx=-1;
+    for (var i=0;i<raw.length;i++) { if(raw[i]&&raw[i].some(function(c){return typeof c==='string'&&c.toUpperCase().indexOf('MATTER ID')!==-1;})){headerIdx=i;break;} }
+    if (headerIdx===-1) continue;
+    var headers=raw[headerIdx].map(function(h){return h?String(h).toUpperCase().trim():'';});
+    function col(name){var e=headers.findIndex(function(h){return h===name;});return e!==-1?e:headers.findIndex(function(h){return h.indexOf(name)!==-1;});}
+    var COL_MATTER=col('MATTER ID'),COL_TITLE=col('MATTER TITLE'),COL_FIRM=col('FIRM'),COL_SOLR=col('SOLICITOR'),COL_INVNO=col('TAX INVOICE NUMBER'),COL_DATE=col('RECEIPT DATE'),COL_VATPCT=col('VAT %'),COL_VAT=col('VAT'),COL_INCL=col('TOTAL (INCL. VAT)');
+    for (var i=headerIdx+1;i<raw.length;i++) {
+      var row=raw[i]; if(!row) continue;
+      var matterId=row[COL_MATTER]; if(!matterId) continue;
+      var matterStr=String(matterId).trim(); if(!matterStr||matterStr.toUpperCase()==='MATTER ID') continue;
+      var dateVal=COL_DATE!==-1?row[COL_DATE]:null, dateStr='';
+      if(typeof dateVal==='number'){var pd=XLSX.SSF.parse_date_code(dateVal);dateStr=String(pd.d).padStart(2,'0')+'/'+String(pd.m).padStart(2,'0')+'/'+pd.y;}
+      else if(typeof dateVal==='string'){dateStr=dateVal.trim();}
+      var vatPctRaw=COL_VATPCT!==-1&&typeof row[COL_VATPCT]==='number'?row[COL_VATPCT]:0;
+      var is20pct=vatPctRaw>=1, taxType=is20pct?'20% (VAT on Income)':'Zero Rated Income';
+      var totalIncl=COL_INCL!==-1&&typeof row[COL_INCL]==='number'?row[COL_INCL]:0; if(totalIncl===0) continue;
+      var vatAmt=COL_VAT!==-1&&typeof row[COL_VAT]==='number'?row[COL_VAT]:0;
+      var invNo=COL_INVNO!==-1&&row[COL_INVNO]?String(row[COL_INVNO]).trim():'';
+      var firm=COL_FIRM!==-1&&row[COL_FIRM]?String(row[COL_FIRM]).trim():'';
+      var solr=COL_SOLR!==-1&&row[COL_SOLR]?String(row[COL_SOLR]).trim():'';
+      var title=COL_TITLE!==-1&&row[COL_TITLE]?String(row[COL_TITLE]).trim():'';
+      var descParts=[matterStr,invNo?'Inv '+invNo:'',firm,solr,title].filter(Boolean);
+      var vatOverride=is20pct&&Math.abs(vatAmt)<0.01; if(vatOverride) taxType='Zero Rated Income';
+      parsedRows.push({date:dateStr,amount:round2(totalIncl),description:descParts.join(' | '),taxType:taxType,reference:invNo,rowClass:vatOverride?'row-vatwarning':(totalIncl<0?'row-out':'row-in'),vatOverride:vatOverride,taxClass:'amber'});
     }
   }
-
-  // ── Parse each barrister sheet ────────────────────────────────────────────
-  var bbBarrister = '', bbInitials = '', bbPeriod = '';
-
-  for (var si = 0; si < bbSheets.length; si++) {
-    var sn  = bbSheets[si];
-    var ws  = wb.Sheets[sn];
-    var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
-
-    // Extract barrister name + period from header rows (rows 0–4)
-    for (var hi = 0; hi < Math.min(5, raw.length); hi++) {
-      var hr = raw[hi]; if (!hr) continue;
-      var cell = hr[0];
-      if (typeof cell !== 'string') continue;
-      var cell = cell.trim();
-      // "Barrister: William O'Hara (WFO)"
-      var bm = cell.match(/^Barrister:\s*(.+?)\s*\(([^)]+)\)\s*$/i);
-      if (bm) { bbBarrister = bm[1].trim(); bbInitials = bm[2].trim(); }
-      // "From DD/MM/YYYY to DD/MM/YYYY"
-      var pm = cell.match(/From\s+(\d{2}\/\d{2}\/\d{4})\s+to\s+(\d{2}\/\d{2}\/\d{4})/i);
-      if (pm) bbPeriod = pm[1] + ' to ' + pm[2];
-    }
-
-    // Find header row (contains 'Matter ID')
-    var headerIdx = -1;
-    for (var i = 0; i < raw.length; i++) {
-      if (raw[i] && raw[i].some(function(c) {
-        return typeof c === 'string' && c.toUpperCase().indexOf('MATTER ID') !== -1;
-      })) { headerIdx = i; break; }
-    }
-    if (headerIdx === -1) continue;
-
-    var headers = raw[headerIdx].map(function(h){ return h ? String(h).toUpperCase().trim() : ''; });
-    function col(name) {
-      var e = headers.findIndex(function(h){ return h === name; });
-      return e !== -1 ? e : headers.findIndex(function(h){ return h.indexOf(name) !== -1; });
-    }
-
-    var COL_MATTER  = col('MATTER ID');
-    var COL_TITLE   = col('MATTER TITLE');
-    var COL_FIRM    = col('FIRM');
-    var COL_SOLR    = col('SOLICITOR');
-    var COL_RCPTNO  = col('RECEIPT NUMBER');
-    var COL_INVNO   = col('TAX INVOICE NUMBER');
-    var COL_DATE    = col('RECEIPT DATE');
-    var COL_VATPCT  = col('VAT %');
-    var COL_EXCL    = col('TOTAL (EXCL. VAT)');
-    var COL_VAT     = col('VAT');
-    var COL_INCL    = col('TOTAL (INCL. VAT)');
-
-    for (var i = headerIdx + 1; i < raw.length; i++) {
-      var row = raw[i]; if (!row) continue;
-      var matterId = row[COL_MATTER];
-      if (!matterId) continue;
-      var matterStr = String(matterId).trim();
-      if (!matterStr || matterStr.toUpperCase() === 'MATTER ID') continue;
-
-      var dateVal = COL_DATE !== -1 ? row[COL_DATE] : null;
-      var dateStr = '';
-      if (typeof dateVal === 'number') {
-        var pd = XLSX.SSF.parse_date_code(dateVal);
-        dateStr = String(pd.d).padStart(2,'0') + '/' + String(pd.m).padStart(2,'0') + '/' + pd.y;
-      } else if (typeof dateVal === 'string') {
-        dateStr = dateVal.trim();
-      }
-
-      var vatPctRaw = COL_VATPCT !== -1 && typeof row[COL_VATPCT] === 'number' ? row[COL_VATPCT] : 0;
-      // BarBooks VAT%: 2 = 20%, 0 = 0% (scale is percentage not decimal)
-      var is20pct  = vatPctRaw >= 1;
-      var taxType  = is20pct ? '20% (VAT on Income)' : 'Zero Rated Income';
-
-      var totalIncl = COL_INCL !== -1 && typeof row[COL_INCL] === 'number' ? row[COL_INCL] : 0;
-      if (totalIncl === 0) continue;
-
-      var vatAmt   = COL_VAT  !== -1 && typeof row[COL_VAT]  === 'number' ? row[COL_VAT]  : 0;
-      var invNo    = COL_INVNO !== -1 && row[COL_INVNO] ? String(row[COL_INVNO]).trim() : '';
-      var firm     = COL_FIRM  !== -1 && row[COL_FIRM]  ? String(row[COL_FIRM]).trim()  : '';
-      var solr     = COL_SOLR  !== -1 && row[COL_SOLR]  ? String(row[COL_SOLR]).trim()  : '';
-      var title    = COL_TITLE !== -1 && row[COL_TITLE] ? String(row[COL_TITLE]).trim()  : '';
-
-      var descParts = [matterStr, invNo ? 'Inv ' + invNo : '', firm, solr, title].filter(Boolean);
-      var description = descParts.join(' | ');
-
-      // vatOverride: VAT% flagged as 20 but £0 VAT recorded
-      var vatOverride = is20pct && Math.abs(vatAmt) < 0.01;
-      if (vatOverride) taxType = 'Zero Rated Income';
-
-      parsedRows.push({
-        date:        dateStr,
-        amount:      round2(totalIncl),
-        description: description,
-        taxType:     taxType,
-        reference:   invNo,
-        rowClass:    vatOverride ? 'row-vatwarning' : (totalIncl < 0 ? 'row-out' : 'row-in'),
-        vatOverride: vatOverride,
-        taxClass:    'amber'
-      });
-    }
-  }
-
-  if (!parsedRows.length) { showErr('No payment rows found. Check this is a BarBooks Payment Summary.'); return; }
-
-  // Metadata
-  reportBarrister = bbBarrister || bbSheets.join(', ');
-  reportPeriod    = bbPeriod;
-  reportCode      = bbInitials || bbSheets.join('_');
-
-  document.getElementById('info-barrister').textContent = bbBarrister || bbSheets.join(', ');
-  document.getElementById('info-period').textContent    = bbPeriod || '—';
-  document.getElementById('info-records').textContent   = bbSheets.join(', ');
-  document.getElementById('info-grid').style.display    = 'grid';
-
-  // VAT override warning
-  var overrideRows = parsedRows.filter(function(r){ return r.vatOverride; });
-  var vatWarn = document.getElementById('vat-warning');
-  if (overrideRows.length > 0) {
-    vatWarn.textContent = '\u26a0 ' + overrideRows.length + ' row' + (overrideRows.length > 1 ? 's have' : ' has') +
-      ' VAT% = 20 but \u00a30 VAT recorded \u2014 treated as Zero Rated Income. See rows highlighted in amber.';
-    vatWarn.style.display = 'block';
-  } else { vatWarn.style.display = 'none'; }
-
-  // VAT check
-  var ourVat = round2(parsedRows.reduce(function(s,r){
-    return r.taxType === '20% (VAT on Income)' ? s + round2(r.amount / 6) : s;
-  }, 0));
-  document.getElementById('vat-ours').textContent = fmt(ourVat);
-  document.getElementById('vat-src').textContent  = bbVat !== null ? fmt(bbVat) : 'n/a';
-  var vatBadge = document.getElementById('vat-badge');
-  if (bbVat !== null) {
-    var vm = Math.abs(ourVat - bbVat) < 0.02;
-    vatBadge.textContent = vm ? '\u2713 VAT matches' : '\u2717 Difference: ' + fmt(ourVat - bbVat);
-    vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
-  } else { vatBadge.textContent = 'BarBooks VAT not found'; vatBadge.className = 'match-badge err'; }
-
+  if(!parsedRows.length){showErr('No payment rows found. Check this is a BarBooks Payment Summary.');return;}
+  reportBarrister=bbBarrister||bbSheets.join(', '); reportPeriod=bbPeriod; reportCode=bbInitials||bbSheets.join('_');
+  document.getElementById('info-barrister').textContent=bbBarrister||bbSheets.join(', ');
+  document.getElementById('info-period').textContent=bbPeriod||'—';
+  document.getElementById('info-records').textContent=bbSheets.join(', ');
+  document.getElementById('info-grid').style.display='grid';
+  var overrideRows=parsedRows.filter(function(r){return r.vatOverride;});
+  var vatWarn=document.getElementById('vat-warning');
+  if(overrideRows.length>0){vatWarn.textContent='\u26a0 '+overrideRows.length+' row'+(overrideRows.length>1?'s have':' has')+' VAT% = 20 but \u00a30 VAT recorded \u2014 treated as Zero Rated Income. See rows highlighted in amber.';vatWarn.style.display='block';}else{vatWarn.style.display='none';}
+  var ourVat=round2(parsedRows.reduce(function(s,r){return r.taxType==='20% (VAT on Income)'?s+round2(r.amount/6):s;},0));
+  document.getElementById('vat-ours').textContent=fmt(ourVat); document.getElementById('vat-src').textContent=bbVat!==null?fmt(bbVat):'n/a';
+  var vatBadge=document.getElementById('vat-badge');
+  if(bbVat!==null){var vm=Math.abs(ourVat-bbVat)<0.02;vatBadge.textContent=vm?'\u2713 VAT matches':'\u2717 Difference: '+fmt(ourVat-bbVat);vatBadge.className='match-badge '+(vm?'ok':'err');}
+  else{vatBadge.textContent='BarBooks VAT not found';vatBadge.className='match-badge err';}
   renderResults(bbTotalInc, bbSheets.join(', '), 'All amounts are payments in (positive)');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// BARSTAT PARSER
-// No header row — fixed positional columns:
-//   0: Barrister code   1: Initials        2: Solicitor/Firm
-//   3: Case number      4: Case title       5: Funding type
-//   6: Case type        7: Date (DD/MM/YYYY) 8: 'E' = expenses (blank = fees)
-//   9: Gross (incl VAT) 10: Net (ex VAT)   11: VAT amount
-//  12: Reference       13: Direction (IN/OUT)
-// Amount = col 9 (gross). VAT > 0 → '20% (VAT on Income)', else 'Zero Rated Income'
+// MTD SL PARSER
 // ════════════════════════════════════════════════════════════════════════════
-function parseBarStatCsvFile(file) {
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var lines = e.target.result.split(/\r?\n/);
-      var allRows = [];
-      var sourceTotal = 0, sourceVat = 0;
-
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].trim();
-        if (!line) continue;
-        var cols = parseCsvLine(line);
-        if (cols.length < 14) continue;
-
-        var dateStr  = (cols[7] || '').trim();
-        var grossStr = (cols[9]  || '').trim();
-        var vatStr   = (cols[11] || '').trim();
-        var dir      = (cols[13] || '').trim().toUpperCase();
-
-        // Validate: date must match DD/MM/YYYY and direction must be IN or OUT
-        if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) continue;
-        if (dir !== 'IN' && dir !== 'OUT') continue;
-
-        var gross = parseFloat(grossStr);
-        var vat   = parseFloat(vatStr);
-        if (isNaN(gross)) continue;
-        if (isNaN(vat)) vat = 0;
-
-        // OUT rows are negative (reversals/credits already appear as negatives in the CSV)
-        var amount  = dir === 'OUT' ? -Math.abs(gross) : gross;
-
-        var taxType = Math.abs(vat) > 0.001 ? '20% (VAT on Income)' : 'Zero Rated Income';
-
-        var barCode  = (cols[0]  || '').trim();
-        var initials = (cols[1]  || '').trim();
-        var solFirm  = (cols[2]  || '').trim();
-        var caseNo   = (cols[3]  || '').trim();
-        var caseTitle= (cols[4]  || '').trim();
-        var expFlag  = (cols[8]  || '').trim().toUpperCase();
-        var ref      = (cols[12] || '').trim();
-
-        var descParts = [caseNo, solFirm, caseTitle].filter(Boolean);
-        if (expFlag === 'E') descParts.push('(Expenses)');
-        var description = descParts.join(' | ');
-
-        sourceTotal += amount;
-        sourceVat   += (dir === 'OUT' ? -Math.abs(vat) : vat);
-
-        allRows.push({
-          date:        dateStr,
-          amount:      Math.round(amount * 100) / 100,
-          description: description,
-          taxType:     taxType,
-          reference:   ref,
-          rowClass:    amount < 0 ? 'row-out' : 'row-in',
-          taxClass:    'green',
-          _barCode:    barCode,
-          _initials:   initials,
-        });
-      }
-
-      if (allRows.length === 0) { showErr('No valid rows found. Check this is a BarStat payment summary CSV.'); return; }
-
-      // Sort by date ascending
-      allRows.sort(function(a, b){ return parseDMY(a.date) - parseDMY(b.date); });
-
-      parsedRows      = allRows;
-      reportCode      = allRows[0]._initials || allRows[0]._barCode || 'BST';
-      reportBarrister = allRows[0]._barCode  || 'BarStat';
-      reportPeriod    = allRows[0].date + ' to ' + allRows[allRows.length - 1].date;
-
-      applyTheme('bst');
-      document.getElementById('info-barrister').textContent = reportCode + ' (' + reportBarrister + ')';
-      document.getElementById('info-period').textContent    = reportPeriod;
-      document.getElementById('info-records').textContent   = file.name;
-      document.getElementById('info-grid').style.display    = 'grid';
-
-      // VAT check — source VAT = sum of col 11 values from rows
-      sourceTotal = Math.round(sourceTotal * 100) / 100;
-      sourceVat   = Math.round(sourceVat   * 100) / 100;
-      var ourVat  = Math.round(parsedRows.reduce(function(s,r){
-        return r.taxType === '20% (VAT on Income)' ? s + r.amount / 6 : s;
-      }, 0) * 100) / 100;
-
-      document.getElementById('vat-ours').textContent = fmt(ourVat);
-      document.getElementById('vat-src').textContent  = fmt(sourceVat);
-      var vatBadge = document.getElementById('vat-badge');
-      var vm = Math.abs(ourVat - sourceVat) < 0.02;
-      vatBadge.textContent = vm ? '\u2713 VAT matches' : '\u2717 Difference: ' + fmt(ourVat - sourceVat);
-      vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
-      document.getElementById('vat-warning').style.display = 'none';
-
-      renderResults(sourceTotal, file.name, 'IN rows positive · OUT rows negative (reversals/credits)');
-    } catch(ex) { showErr(ex.message); }
-  };
-  reader.readAsText(file);
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// MTD CB PARSER  — parses 1–3 CSV files, merges income rows, combined output
-// ════════════════════════════════════════════════════════════════════════════
-function parseMtdCsvFiles(files) {
-  var allRows = [], filesDone = 0, fileNames = [];
-  var sourceTotal = 0, sourceVat = 0;
-
+function parseMtdSlCsvFiles(files) {
+  var allRows=[], filesDone=0, fileNames=[], sourceTotal=0, sourceVat=0;
   Array.from(files).forEach(function(file) {
     fileNames.push(file.name);
-    var reader = new FileReader();
-    reader.onload = function(e) {
+    var reader=new FileReader();
+    reader.onload=function(e){
       try {
-        var lines = e.target.result.split(/\r?\n/);
-        var headerIdx = -1, headers = [];
-        for (var i = 0; i < lines.length; i++) {
-          var cols = parseCsvLine(lines[i]);
-          var upper = cols.map(function(h){ return h.replace(/\*/g,'').trim().toUpperCase(); });
-          if (upper.indexOf('DATE') !== -1 && upper.indexOf('AMOUNT') !== -1) {
-            headerIdx = i; headers = upper; break;
-          }
+        var lines=e.target.result.split(/\r?\n/), headerIdx=-1, headers=[];
+        for(var i=0;i<lines.length;i++){var cols=parseCsvLine(lines[i]);var upper=cols.map(function(h){return h.replace(/\*/g,'').trim().toUpperCase();});if(upper.indexOf('INVOICENUMBER')!==-1&&upper.indexOf('UNITAMOUNT')!==-1){headerIdx=i;headers=upper;break;}}
+        if(headerIdx===-1){showErr('Could not find header row in '+file.name);return;}
+        var iDate=headers.indexOf('INVOICEDATE'),iRef=headers.indexOf('INVOICENUMBER'),iDesc=headers.indexOf('DESCRIPTION'),iNet=headers.indexOf('UNITAMOUNT'),iTax=headers.indexOf('TAXTYPE'),iVat=headers.indexOf('TAXAMOUNT');
+        for(var i=headerIdx+1;i<lines.length;i++){
+          var cols=parseCsvLine(lines[i]); if(cols.length<3||!cols[iNet]) continue;
+          var net=parseFloat(cols[iNet])||0, vat=iVat!==-1?(parseFloat(cols[iVat])||0):0;
+          if(net===0&&vat===0) continue;
+          var gross=Math.round((net+vat)*100)/100, taxType=iTax!==-1?cols[iTax].trim():(vat>0?'20% (VAT on Income)':'Zero Rated Income');
+          var rawDate=iDate!==-1?cols[iDate].trim():'', dateStr=rawDate.split(' ')[0];
+          sourceTotal+=gross; sourceVat+=vat;
+          allRows.push({date:dateStr,amount:gross,description:iDesc!==-1?cols[iDesc].trim():'',taxType:taxType,reference:iRef!==-1?cols[iRef].trim():'',rowClass:gross<0?'row-out':'row-in',taxClass:'gold'});
         }
-        if (headerIdx === -1) { showErr('Could not find header row in ' + file.name); return; }
-
-        var iDate  = headers.indexOf('DATE');
-        var iAmt   = headers.indexOf('AMOUNT');
-        var iPayee = headers.indexOf('PAYEE');
-        var iDesc  = headers.indexOf('DESCRIPTION');
-        var iRef   = headers.indexOf('REFERENCE');
-        var iTax   = headers.indexOf('TAXTYPE');
-
-        for (var i = headerIdx + 1; i < lines.length; i++) {
-          var cols = parseCsvLine(lines[i]);
-          if (cols.length < 3) continue;
-          var taxType = iTax !== -1 ? cols[iTax].trim() : '';
-          if (taxType.toUpperCase().indexOf('INCOME') === -1) continue;  // income rows only
-          var amt = parseFloat(cols[iAmt]) || 0;
-          allRows.push({
-            date:         iDate !== -1 ? cols[iDate].trim() : '',
-            amount:       amt,
-            description:  iDesc !== -1 ? cols[iDesc].trim() : '',
-            taxType:      taxType,
-            reference:    iRef  !== -1 ? cols[iRef].trim()  : '',
-            rowClass:     amt < 0 ? 'row-out' : 'row-in',
-            taxClass:     'teal',
-          });
-          sourceTotal += amt;
-          if (taxType.indexOf('20%') !== -1) sourceVat += amt / 6;
-        }
-      } catch(ex) { showErr(ex.message); }
-
+      } catch(ex){showErr(ex.message);}
       filesDone++;
-      if (filesDone < files.length) return;  // wait for all files
-
-      if (allRows.length === 0) { showErr('No income rows found in the uploaded MTD CB file(s).'); return; }
-
-      // Sort by date ascending
-      allRows.sort(function(a, b){ return parseDMY(a.date) - parseDMY(b.date); });
-
-      parsedRows      = allRows;
-      reportBarrister = fileNames.join(', ');
-      reportPeriod    = '';
-      reportCode      = 'MTD';
-
-      applyTheme('mtd');
-      document.getElementById('info-barrister').textContent = fileNames.join(', ');
-      document.getElementById('info-period').textContent    = allRows[0].date + ' \u2013 ' + allRows[allRows.length - 1].date;
-      document.getElementById('info-records').textContent   = files.length + ' file' + (files.length > 1 ? 's' : '');
-
-      // VAT check
-      var ourVat = Math.round(parsedRows.reduce(function(s,r){
-        return r.taxType.indexOf('20%') !== -1 ? s + r.amount / 6 : s;
-      }, 0) * 100) / 100;
-      sourceVat = Math.round(sourceVat * 100) / 100;
-      document.getElementById('vat-ours').textContent = fmt(ourVat);
-      document.getElementById('vat-src').textContent  = fmt(sourceVat);
-      var vatBadge = document.getElementById('vat-badge');
-      var vm = Math.abs(ourVat - sourceVat) < 0.02;
-      vatBadge.textContent = vm ? '\u2713 VAT matches' : '\u2717 Difference: ' + fmt(ourVat - sourceVat);
-      vatBadge.className   = 'match-badge ' + (vm ? 'ok' : 'err');
-      document.getElementById('vat-warning').style.display = 'none';
-
-      renderResults(Math.round(sourceTotal * 100) / 100, fileNames.join(', '), 'Income rows only (expense rows excluded)');
+      if(filesDone<files.length) return;
+      if(allRows.length===0){showErr('No rows found in the uploaded MTD SL file(s).');return;}
+      allRows.sort(function(a,b){return parseDMY(a.date)-parseDMY(b.date);});
+      parsedRows=allRows; reportCode=''; reportBarrister=fileNames.join(', ');
+      reportPeriod=allRows[0].date+' to '+allRows[allRows.length-1].date;
+      var codeMatch=allRows[0].reference.match(/\d+([A-Z]+)\d+/); if(codeMatch) reportCode=codeMatch[1];
+      applyTheme('mtdsl');
+      document.getElementById('info-barrister').textContent=fileNames.join(', ');
+      document.getElementById('info-period').textContent=allRows[0].date+' \u2013 '+allRows[allRows.length-1].date;
+      document.getElementById('info-records').textContent=files.length+' file'+(files.length>1?'s':'');
+      document.getElementById('info-grid').style.display='grid';
+      sourceTotal=Math.round(sourceTotal*100)/100; sourceVat=Math.round(sourceVat*100)/100;
+      var ourVat=Math.round(parsedRows.reduce(function(s,r){return r.taxType==='20% (VAT on Income)'?s+r.amount/6:s;},0)*100)/100;
+      document.getElementById('vat-ours').textContent=fmt(ourVat); document.getElementById('vat-src').textContent=fmt(sourceVat);
+      var vatBadge=document.getElementById('vat-badge'); var vm=Math.abs(ourVat-sourceVat)<0.02;
+      vatBadge.textContent=vm?'\u2713 VAT matches':'\u2717 Difference: '+fmt(ourVat-sourceVat); vatBadge.className='match-badge '+(vm?'ok':'err');
+      document.getElementById('vat-warning').style.display='none';
+      renderResults(sourceTotal, fileNames.join(', '), 'Gross amounts (UnitAmount + TaxAmount) · income rows only');
     };
     reader.readAsText(file);
   });
 }
 
-// Simple RFC-4180 CSV line parser (handles quoted fields with embedded commas/newlines)
-function parseCsvLine(line) {
-  var result = [], cur = '', inQ = false;
-  for (var i = 0; i < line.length; i++) {
-    var ch = line[i];
-    if (ch === '"') {
-      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
-      else inQ = !inQ;
-    } else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += ch; }
-  }
-  result.push(cur);
-  return result;
+// ════════════════════════════════════════════════════════════════════════════
+// BARSTAT PARSER
+// ════════════════════════════════════════════════════════════════════════════
+function parseBarStatCsvFile(file) {
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try {
+      var lines=e.target.result.split(/\r?\n/), allRows=[], sourceTotal=0, sourceVat=0;
+      for(var i=0;i<lines.length;i++){
+        var line=lines[i].trim(); if(!line) continue;
+        var cols=parseCsvLine(line); if(cols.length<14) continue;
+        var dateStr=(cols[7]||'').trim(), grossStr=(cols[9]||'').trim(), vatStr=(cols[11]||'').trim(), dir=(cols[13]||'').trim().toUpperCase();
+        if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) continue;
+        if(dir!=='IN'&&dir!=='OUT') continue;
+        var gross=parseFloat(grossStr), vat=parseFloat(vatStr); if(isNaN(gross)) continue; if(isNaN(vat)) vat=0;
+        var amount=dir==='OUT'?-Math.abs(gross):gross, taxType=Math.abs(vat)>0.001?'20% (VAT on Income)':'Zero Rated Income';
+        var barCode=(cols[0]||'').trim(), initials=(cols[1]||'').trim(), solFirm=(cols[2]||'').trim(), caseNo=(cols[3]||'').trim(), caseTitle=(cols[4]||'').trim(), expFlag=(cols[8]||'').trim().toUpperCase(), ref=(cols[12]||'').trim();
+        var descParts=[caseNo,solFirm,caseTitle].filter(Boolean); if(expFlag==='E') descParts.push('(Expenses)');
+        sourceTotal+=amount; sourceVat+=(dir==='OUT'?-Math.abs(vat):vat);
+        allRows.push({date:dateStr,amount:Math.round(amount*100)/100,description:descParts.join(' | '),taxType:taxType,reference:ref,rowClass:amount<0?'row-out':'row-in',taxClass:'green',_barCode:barCode,_initials:initials});
+      }
+      if(allRows.length===0){showErr('No valid rows found. Check this is a BarStat payment summary CSV.');return;}
+      allRows.sort(function(a,b){return parseDMY(a.date)-parseDMY(b.date);});
+      parsedRows=allRows; reportCode=allRows[0]._initials||allRows[0]._barCode||'BST'; reportBarrister=allRows[0]._barCode||'BarStat'; reportPeriod=allRows[0].date+' to '+allRows[allRows.length-1].date;
+      applyTheme('bst');
+      document.getElementById('info-barrister').textContent=reportCode+' ('+reportBarrister+')';
+      document.getElementById('info-period').textContent=reportPeriod; document.getElementById('info-records').textContent=file.name; document.getElementById('info-grid').style.display='grid';
+      sourceTotal=Math.round(sourceTotal*100)/100; sourceVat=Math.round(sourceVat*100)/100;
+      var ourVat=Math.round(parsedRows.reduce(function(s,r){return r.taxType==='20% (VAT on Income)'?s+r.amount/6:s;},0)*100)/100;
+      document.getElementById('vat-ours').textContent=fmt(ourVat); document.getElementById('vat-src').textContent=fmt(sourceVat);
+      var vatBadge=document.getElementById('vat-badge'); var vm=Math.abs(ourVat-sourceVat)<0.02;
+      vatBadge.textContent=vm?'\u2713 VAT matches':'\u2717 Difference: '+fmt(ourVat-sourceVat); vatBadge.className='match-badge '+(vm?'ok':'err');
+      document.getElementById('vat-warning').style.display='none';
+      renderResults(sourceTotal, file.name, 'IN rows positive · OUT rows negative (reversals/credits)');
+    } catch(ex){showErr(ex.message);}
+  };
+  reader.readAsText(file);
 }
 
-// Parse DD/MM/YYYY (or DD/MM/YY) date string to timestamp for sorting
+// ════════════════════════════════════════════════════════════════════════════
+// MTD CB PARSER
+// ════════════════════════════════════════════════════════════════════════════
+function parseMtdCsvFiles(files) {
+  var allRows=[], filesDone=0, fileNames=[], sourceTotal=0, sourceVat=0;
+  Array.from(files).forEach(function(file) {
+    fileNames.push(file.name);
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try {
+        var lines=e.target.result.split(/\r?\n/), headerIdx=-1, headers=[];
+        for(var i=0;i<lines.length;i++){var cols=parseCsvLine(lines[i]);var upper=cols.map(function(h){return h.replace(/\*/g,'').trim().toUpperCase();});if(upper.indexOf('DATE')!==-1&&upper.indexOf('AMOUNT')!==-1){headerIdx=i;headers=upper;break;}}
+        if(headerIdx===-1){showErr('Could not find header row in '+file.name);return;}
+        var iDate=headers.indexOf('DATE'),iAmt=headers.indexOf('AMOUNT'),iDesc=headers.indexOf('DESCRIPTION'),iRef=headers.indexOf('REFERENCE'),iTax=headers.indexOf('TAXTYPE');
+        for(var i=headerIdx+1;i<lines.length;i++){
+          var cols=parseCsvLine(lines[i]); if(cols.length<3) continue;
+          var taxType=iTax!==-1?cols[iTax].trim():''; if(taxType.toUpperCase().indexOf('INCOME')===-1) continue;
+          var amt=parseFloat(cols[iAmt])||0;
+          allRows.push({date:iDate!==-1?cols[iDate].trim():'',amount:amt,description:iDesc!==-1?cols[iDesc].trim():'',taxType:taxType,reference:iRef!==-1?cols[iRef].trim():'',rowClass:amt<0?'row-out':'row-in',taxClass:'teal'});
+          sourceTotal+=amt; if(taxType.indexOf('20%')!==-1) sourceVat+=amt/6;
+        }
+      } catch(ex){showErr(ex.message);}
+      filesDone++;
+      if(filesDone<files.length) return;
+      if(allRows.length===0){showErr('No income rows found in the uploaded MTD CB file(s).');return;}
+      allRows.sort(function(a,b){return parseDMY(a.date)-parseDMY(b.date);});
+      parsedRows=allRows; reportBarrister=fileNames.join(', '); reportPeriod=''; reportCode='MTD';
+      applyTheme('mtd');
+      document.getElementById('info-barrister').textContent=fileNames.join(', ');
+      document.getElementById('info-period').textContent=allRows[0].date+' \u2013 '+allRows[allRows.length-1].date;
+      document.getElementById('info-records').textContent=files.length+' file'+(files.length>1?'s':'');
+      var ourVat=Math.round(parsedRows.reduce(function(s,r){return r.taxType.indexOf('20%')!==-1?s+r.amount/6:s;},0)*100)/100;
+      sourceVat=Math.round(sourceVat*100)/100;
+      document.getElementById('vat-ours').textContent=fmt(ourVat); document.getElementById('vat-src').textContent=fmt(sourceVat);
+      var vatBadge=document.getElementById('vat-badge'); var vm=Math.abs(ourVat-sourceVat)<0.02;
+      vatBadge.textContent=vm?'\u2713 VAT matches':'\u2717 Difference: '+fmt(ourVat-sourceVat); vatBadge.className='match-badge '+(vm?'ok':'err');
+      document.getElementById('vat-warning').style.display='none';
+      renderResults(Math.round(sourceTotal*100)/100, fileNames.join(', '), 'Income rows only (expense rows excluded)');
+    };
+    reader.readAsText(file);
+  });
+}
+
+// ── CSV helpers ────────────────────────────────────────────────────────────
+function parseCsvLine(line) {
+  var result=[],cur='',inQ=false;
+  for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){result.push(cur);cur='';}else{cur+=ch;}}
+  result.push(cur); return result;
+}
 function parseDMY(dateStr) {
-  var m = dateStr.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
-  if (!m) return 0;
-  var y = parseInt(m[3]); if (y < 100) y += 2000;
-  return new Date(y, parseInt(m[2]) - 1, parseInt(m[1])).getTime();
+  var m=dateStr.match(/(\d{2})\/(\d{2})\/(\d{2,4})/); if(!m) return 0;
+  var y=parseInt(m[3]); if(y<100) y+=2000;
+  return new Date(y,parseInt(m[2])-1,parseInt(m[1])).getTime();
 }
 
 // ── Drag & drop / file input ───────────────────────────────────────────────
 var dz = document.getElementById('drop-zone');
 dz.addEventListener('dragover',  function(e){ e.preventDefault(); dz.classList.add('dragging'); });
 dz.addEventListener('dragleave', function(){ dz.classList.remove('dragging'); });
-dz.addEventListener('drop', function(e){
-  e.preventDefault(); dz.classList.remove('dragging');
-  if (e.dataTransfer.files.length) parseFiles(e.dataTransfer.files);
-});
-document.getElementById('file-input').addEventListener('change', function(e){
-  if (e.target.files.length) parseFiles(e.target.files);
-});
+dz.addEventListener('drop', function(e){ e.preventDefault(); dz.classList.remove('dragging'); if(e.dataTransfer.files.length) parseFiles(e.dataTransfer.files); });
+document.getElementById('file-input').addEventListener('change', function(e){ if(e.target.files.length) parseFiles(e.target.files); });
 </script>
 </body>
 </html>
