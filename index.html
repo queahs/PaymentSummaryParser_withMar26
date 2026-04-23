@@ -899,20 +899,26 @@ function parseMeridianMulti(workbooks, files) {
       if (vatOverride) overrideCount++;
       var rowClass = vatOverride ? 'row-vatoverride' : (fees > 0 && exps > 0) ? 'row-mixed' : (exps > 0 ? 'row-expenses' : 'row-in');
 
-      // ── Meridian split logic: VAT% = 0 but actual VAT recorded ─────────────
-      // e.g. Inv 103 line 2: fees £4,911.35 + VAT £20.89 = £4,932.24 total
-      // VAT was charged on only part of the amount. Split into:
-      //   Line 1: vatAmt × 6 = £125.34  @ 20% (VAT on Income)  → amount/6 = £20.89 ✓
-      //   Line 2: remainder  = £4,806.90 @ Zero Rated Income
-      // This keeps the amount/6 VAT check in sync with Meridian's reported VAT total.
-      var isMixedVat = (vatPct < 15) && (actualVat > 0);
-      if (isMixedVat) {
-        var sign     = totalPaid < 0 ? -1 : 1;
-        var cleanAmt = round2(actualVat * 6);
-        var adjAmt   = round2(Math.abs(totalPaid) - cleanAmt);
-        parsedRows.push({ date: dateStr, amount: sign * cleanAmt, description: description, taxType: '20% (VAT on Income)', reference: invNo, rowClass: rowClass, vatOverride: false, taxClass: 'purple' });
+      // ── Meridian split logic ────────────────────────────────────────────────
+      // Two cases where amount/6 would not equal the actual VAT recorded:
+      //
+      // Case A — isMixedVat: VAT% = 0 but actual VAT > 0
+      //   e.g. Inv 103 line 2: fees £4,911.35 + VAT £20.89 = £4,932.24 total
+      //   VAT charged on only part. Split: vatAmt×6 @ 20%, remainder @ Zero Rated.
+      //
+      // Case B — isVatReversal: VAT% = 20, actual VAT > 0, but total/6 ≠ signedVat
+      //   e.g. Inv 80: pure VAT-only reversal, fees = £0, total = −£350 = signedVat
+      //   total/6 = −£58.33 which is wrong; need cleanAmt = signedVat×6 = −£2,100
+      //   so that cleanAmt/6 = −£350 exactly matches Meridian's reported VAT.
+      var signedVat     = (typeof vatFees === 'number' ? vatFees : 0) + (typeof vatExp === 'number' ? vatExp : 0);
+      var isMixedVat    = (vatPct < 15) && (actualVat > 0);
+      var isVatReversal = (vatPct >= 15) && (actualVat > 0) && (Math.abs(round2(totalPaid / 6) - signedVat) >= 0.02);
+      if (isMixedVat || isVatReversal) {
+        var cleanAmt = round2(signedVat * 6);
+        var adjAmt   = round2(totalPaid - cleanAmt);
+        parsedRows.push({ date: dateStr, amount: cleanAmt, description: description, taxType: '20% (VAT on Income)', reference: invNo, rowClass: rowClass, vatOverride: false, taxClass: 'purple' });
         if (Math.abs(adjAmt) >= 0.01) {
-          parsedRows.push({ date: dateStr, amount: sign * adjAmt, description: description + ' | adjustment', taxType: 'Zero Rated Income', reference: invNo, rowClass: 'row-vatoverride', vatOverride: false, isAdj: true, taxClass: 'purple' });
+          parsedRows.push({ date: dateStr, amount: adjAmt, description: description + ' | adjustment', taxType: 'Zero Rated Income', reference: invNo, rowClass: 'row-vatoverride', vatOverride: false, isAdj: true, taxClass: 'purple' });
         }
       } else {
         parsedRows.push({ date: dateStr, amount: round2(totalPaid), description: description, taxType: taxType, reference: invNo, rowClass: rowClass, vatOverride: vatOverride, taxClass: 'purple' });
